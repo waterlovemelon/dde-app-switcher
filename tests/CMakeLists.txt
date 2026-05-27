@@ -1,5 +1,5 @@
-function(add_deepswitch_test name source)
-    add_executable(${name} ${source})
+function(add_deepswitch_test name)
+    add_executable(${name} ${ARGN})
     target_link_libraries(${name} PRIVATE deepswitch_core Qt6::Test Qt6::Core)
     add_test(NAME ${name} COMMAND ${name})
     set_tests_properties(${name} PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -29,3 +29,8 @@ target_link_libraries(test_agent_controller PRIVATE deepswitch_agent)
 
 add_deepswitch_test(test_settings_controller settings/test_settings_controller.cpp)
 target_link_libraries(test_settings_controller PRIVATE deepswitch_settings)
+
+add_deepswitch_test(test_settings_qml_resource
+    settings/test_settings_qml_resource.cpp
+    ${CMAKE_SOURCE_DIR}/src/settings/qml/qml.qrc
+)

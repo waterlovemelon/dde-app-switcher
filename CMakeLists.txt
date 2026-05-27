@@ -6,9 +6,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Test Gui DBus)
+find_package(Qt6 COMPONENTS Qml Quick QuickControls2 QUIET)
 find_package(X11 REQUIRED)
 
 enable_testing()
@@ -105,5 +107,24 @@ target_link_libraries(deepswitch-agent PRIVATE
     Qt6::Core
     Qt6::DBus
 )
+
+if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
+    add_executable(deepswitch-settings
+        src/settings/main.cpp
+        src/settings/qml/qml.qrc
+    )
+
+    target_link_libraries(deepswitch-settings PRIVATE
+        deepswitch_settings
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Qml
+        Qt6::Quick
+        Qt6::QuickControls2
+        Qt6::DBus
+    )
+else()
+    message(STATUS "Qt6 QML/Quick development packages not found; skipping deepswitch-settings GUI target")
+endif()
 
 add_subdirectory(tests)
