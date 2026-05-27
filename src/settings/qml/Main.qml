@@ -202,40 +202,11 @@ ApplicationWindow {
                 }
 
                 SectionCard {
-                    ListView {
+                    ApplicationPicker {
                         anchors.fill: parent
                         anchors.margins: 18
-                        spacing: 10
-                        clip: true
-                        model: settingsController.applications.length > 0 ? settingsController.applications : [ { "name": qsTr("No applications loaded"), "desktop_id": qsTr("Start the agent and refresh to scan desktop entries.") } ]
-
-                        delegate: SectionCard {
-                            required property var modelData
-
-                            width: ListView.view.width
-                            height: 66
-                            color: "#ffffff"
-
-                            ColumnLayout {
-                                anchors.fill: parent
-                                anchors.margins: 14
-                                spacing: 2
-
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: modelData.localized_name || modelData.name || qsTr("Unnamed application")
-                                    color: "#17313c"
-                                    font.pixelSize: 15
-                                    font.weight: Font.DemiBold
-                                    elide: Text.ElideRight
-                                }
-
-                                MutedText {
-                                    Layout.fillWidth: true
-                                    text: modelData.desktop_id || ""
-                                }
-                            }
-                        }
+                        applications: settingsController.applications
+                        selectable: false
                     }
                 }
 

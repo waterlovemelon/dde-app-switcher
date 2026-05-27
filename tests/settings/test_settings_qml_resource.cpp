@@ -18,6 +18,13 @@ private slots:
         QVERIFY(bindingsPageQml.isValid());
         QVERIFY(bindingsPageQml.size() > 0);
     }
+
+    void applicationPickerQmlIsEmbedded()
+    {
+        const QResource applicationPickerQml(":/qml/ApplicationPicker.qml");
+        QVERIFY(applicationPickerQml.isValid());
+        QVERIFY(applicationPickerQml.size() > 0);
+    }
 };
 
 QTEST_MAIN(SettingsQmlResourceTest)

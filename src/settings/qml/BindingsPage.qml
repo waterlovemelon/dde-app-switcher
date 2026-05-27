@@ -344,6 +344,11 @@ Item {
             open()
         }
 
+        function selectApplication(application) {
+            desktopIdField.text = page.displayText(application.desktop_id, "")
+            appPickerDialog.close()
+        }
+
         title: originalId.length > 0 ? qsTr("Edit Binding") : qsTr("Add Binding")
         modal: true
         width: Math.min(page.width - 48, 560)
@@ -381,10 +386,20 @@ Item {
                 }
 
                 FieldLabel { text: qsTr("Desktop ID") }
-                TextField {
-                    id: desktopIdField
+                RowLayout {
                     Layout.fillWidth: true
-                    placeholderText: qsTr("org.deepin.Terminal.desktop")
+                    spacing: 8
+
+                    TextField {
+                        id: desktopIdField
+                        Layout.fillWidth: true
+                        placeholderText: qsTr("org.deepin.Terminal.desktop")
+                    }
+
+                    Button {
+                        text: qsTr("Pick")
+                        onClicked: appPickerDialog.open()
+                    }
                 }
 
                 FieldLabel { text: qsTr("Strategy") }
@@ -457,6 +472,26 @@ Item {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    Dialog {
+        id: appPickerDialog
+
+        title: qsTr("Choose Application")
+        modal: true
+        width: Math.min(page.width - 48, 720)
+        height: Math.min(page.height - 48, 560)
+        x: Math.round((page.width - width) / 2)
+        y: Math.round((page.height - height) / 2)
+
+        contentItem: ApplicationPicker {
+            applications: controller.applications
+            selectedDesktopId: desktopIdField.text
+            selectable: true
+            onApplicationSelected: function(application) {
+                editorDialog.selectApplication(application)
             }
         }
     }

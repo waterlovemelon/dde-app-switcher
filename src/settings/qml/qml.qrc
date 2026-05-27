@@ -2,5 +2,6 @@
     <qresource prefix="/qml">
         <file>Main.qml</file>
         <file>BindingsPage.qml</file>
+        <file>ApplicationPicker.qml</file>
     </qresource>
 </RCC>
