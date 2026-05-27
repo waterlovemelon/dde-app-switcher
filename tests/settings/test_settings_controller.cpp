@@ -90,6 +90,7 @@ private slots:
         QCOMPARE(controller.applications().size(), 1);
         QCOMPARE(controller.applications().first().toMap().value("name").toString(), QString("Terminal"));
         QCOMPARE(controller.lastError(), QString());
+        QCOMPARE(controller.lastErrorCode(), QString());
         QCOMPARE(connectedChanged.count(), 1);
         QCOMPARE(bindingsChanged.count(), 1);
         QCOMPARE(applicationsChanged.count(), 1);
@@ -107,6 +108,7 @@ private slots:
         QCOMPARE(controller.bindings().size(), 0);
         QCOMPARE(controller.applications().size(), 0);
         QVERIFY(controller.lastError().contains("unavailable"));
+        QCOMPARE(controller.lastErrorCode(), QString("agent_unavailable"));
         QCOMPARE(controller.saveBinding({ { "id", "terminal" } }), false);
         QCOMPARE(controller.removeBinding("terminal"), false);
         QCOMPARE(controller.testHotkey("Alt+Return", "terminal"), false);
@@ -125,6 +127,7 @@ private slots:
         QCOMPARE(controller.saveBinding({ { "id", "terminal" } }), false);
         QCOMPARE(client.lastSavedBinding.value("id").toString(), QString("terminal"));
         QCOMPARE(controller.lastError(), QString("SetBinding is not implemented yet."));
+        QCOMPARE(controller.lastErrorCode(), QString("not_implemented"));
 
         QCOMPARE(controller.removeBinding("terminal"), false);
         QCOMPARE(client.lastRemovedId, QString("terminal"));
@@ -135,6 +138,27 @@ private slots:
 
         QCOMPARE(controller.launchApp("org.deepin.Terminal.desktop"), false);
         QCOMPARE(client.lastLaunchedDesktopId, QString("org.deepin.Terminal.desktop"));
+    }
+
+    void testHotkeyPreservesStructuredErrorCodeAndClearsOnSuccess()
+    {
+        FakeAgentClient client;
+        SettingsController controller(client);
+
+        client.operationResult = AgentCallResult::failure("hotkey_conflict", "Hotkey conflicts with binding 'terminal'.");
+        QCOMPARE(controller.testHotkey("Alt+Return", "browser"), false);
+        QCOMPARE(controller.lastErrorCode(), QString("hotkey_conflict"));
+        QCOMPARE(controller.lastError(), QString("Hotkey conflicts with binding 'terminal'."));
+
+        client.operationResult = AgentCallResult::failure("hotkey_backend_unavailable", "Backend-level test unavailable.");
+        QCOMPARE(controller.testHotkey("Ctrl+Alt+Enter", "terminal"), false);
+        QCOMPARE(controller.lastErrorCode(), QString("hotkey_backend_unavailable"));
+        QCOMPARE(controller.lastError(), QString("Backend-level test unavailable."));
+
+        client.operationResult = AgentCallResult::success(QVariantMap {});
+        QCOMPARE(controller.testHotkey("Meta+B", "browser"), true);
+        QCOMPARE(controller.lastErrorCode(), QString());
+        QCOMPARE(controller.lastError(), QString());
     }
 };
 

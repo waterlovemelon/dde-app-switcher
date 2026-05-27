@@ -61,6 +61,11 @@ QString SettingsController::lastError() const
     return m_lastError;
 }
 
+QString SettingsController::lastErrorCode() const
+{
+    return m_lastErrorCode;
+}
+
 void SettingsController::refresh()
 {
     if (!ensureAvailable()) {
@@ -72,7 +77,7 @@ void SettingsController::refresh()
     if (!statusResult.ok) {
         setConnected(false);
         clearData();
-        setLastError(operationErrorMessage(statusResult));
+        setLastErrorResult(statusResult);
         return;
     }
 
@@ -86,7 +91,7 @@ void SettingsController::refresh()
         setBindings(bindingsResult.value.toList());
     } else {
         setBindings({});
-        setLastError(operationErrorMessage(bindingsResult));
+        setLastErrorResult(bindingsResult);
     }
 
     const AgentCallResult applicationsResult = m_client->listApplications();
@@ -94,11 +99,12 @@ void SettingsController::refresh()
         setApplications(applicationsResult.value.toList());
     } else {
         setApplications({});
-        setLastError(operationErrorMessage(applicationsResult));
+        setLastErrorResult(applicationsResult);
     }
 
     if (statusResult.ok && bindingsResult.ok && applicationsResult.ok) {
         setLastError(QString());
+        setLastErrorCode(QString());
     }
 }
 
@@ -140,6 +146,7 @@ bool SettingsController::ensureAvailable()
     setConnected(available);
     if (!available) {
         setLastError("DeepSwitch agent is unavailable.");
+        setLastErrorCode("agent_unavailable");
     }
     return available;
 }
@@ -198,13 +205,29 @@ void SettingsController::setLastError(const QString& lastError)
     emit lastErrorChanged();
 }
 
+void SettingsController::setLastErrorCode(const QString& lastErrorCode)
+{
+    if (m_lastErrorCode == lastErrorCode) {
+        return;
+    }
+    m_lastErrorCode = lastErrorCode;
+    emit lastErrorCodeChanged();
+}
+
+void SettingsController::setLastErrorResult(const AgentCallResult& result)
+{
+    setLastError(operationErrorMessage(result));
+    setLastErrorCode(result.errorCode);
+}
+
 bool SettingsController::applyOperationResult(const AgentCallResult& result)
 {
     if (!result.ok) {
-        setLastError(operationErrorMessage(result));
+        setLastErrorResult(result);
         return false;
     }
     setLastError(QString());
+    setLastErrorCode(QString());
     return true;
 }
 

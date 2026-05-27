@@ -98,10 +98,6 @@ private slots:
         QCOMPARE(removeBinding.value("ok").toBool(), false);
         QCOMPARE(removeBinding.value("error_code").toString(), QString("not_implemented"));
 
-        const QVariantMap testHotkey = service.TestHotkey("Alt+Return", "terminal");
-        QCOMPARE(testHotkey.value("ok").toBool(), false);
-        QCOMPARE(testHotkey.value("error_code").toString(), QString("not_implemented"));
-
         const QVariantMap activateWindow = service.ActivateWindow(123);
         QCOMPARE(activateWindow.value("ok").toBool(), false);
         QCOMPARE(activateWindow.value("error_code").toString(), QString("not_implemented"));
@@ -114,6 +110,57 @@ private slots:
         QCOMPARE(windows.value("ok").toBool(), false);
         QCOMPARE(windows.value("error_code").toString(), QString("backend_unavailable"));
         QCOMPARE(windows.value("items").toList().size(), 0);
+    }
+
+    void testHotkeyReturnsControllerResultEnvelope()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString configPath = dir.path() + "/config.json";
+
+        Config config = Config::defaults();
+        Binding binding;
+        binding.id = "terminal";
+        binding.hotkey = "Alt+Return";
+        config.bindings.append(binding);
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        AgentController controller(configPath, AgentController::BackendMode::Disabled);
+        QVERIFY(controller.reloadConfig().ok);
+        AgentDBusService service(controller);
+
+        const QVariantMap invalid = service.TestHotkey("Alt", QString());
+        QCOMPARE(invalid.value("ok").toBool(), false);
+        QCOMPARE(invalid.value("error_code").toString(), QString("hotkey_invalid"));
+
+        const QVariantMap conflict = service.TestHotkey("alt+enter", "browser");
+        QCOMPARE(conflict.value("ok").toBool(), false);
+        QCOMPARE(conflict.value("error_code").toString(), QString("hotkey_conflict"));
+
+        const QVariantMap unchangedExcluded = service.TestHotkey("Alt+Enter", "terminal");
+        QCOMPARE(unchangedExcluded.value("ok").toBool(), true);
+    }
+
+    void testHotkeyReturnsSuccessEnvelopeWhenBackendTestPasses()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString configPath = dir.path() + "/config.json";
+        QVERIFY(ConfigManager(configPath).save(Config::defaults()).ok);
+
+        AgentController controller(
+            configPath,
+            AgentController::BackendMode::Disabled,
+            {},
+            [](const Hotkey&) {
+                return VoidResult::success();
+            });
+        QVERIFY(controller.reloadConfig().ok);
+        AgentDBusService service(controller);
+
+        const QVariantMap available = service.TestHotkey("Meta+Space", QString());
+        QCOMPARE(available.value("ok").toBool(), true);
+        QCOMPARE(available.value("message").toString(), QString("hotkey available"));
     }
 
     void registersOnSessionBusWhenAvailable()

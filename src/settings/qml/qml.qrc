@@ -3,5 +3,6 @@
         <file>Main.qml</file>
         <file>BindingsPage.qml</file>
         <file>ApplicationPicker.qml</file>
+        <file>HotkeyRecorder.qml</file>
     </qresource>
 </RCC>

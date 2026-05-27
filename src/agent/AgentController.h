@@ -2,6 +2,7 @@
 
 #include "core/AppInfo.h"
 #include "core/Config.h"
+#include "core/Hotkey.h"
 #include "core/Result.h"
 #include "core/WindowInfo.h"
 
@@ -33,13 +34,18 @@ struct AgentControllerStatus {
 class AgentController {
 public:
     using LauncherFn = std::function<VoidResult(const AppInfo&)>;
+    using HotkeyTestFn = std::function<VoidResult(const Hotkey&)>;
 
     enum class BackendMode {
         X11,
         Disabled
     };
 
-    explicit AgentController(QString configPath, BackendMode backendMode = BackendMode::X11, LauncherFn launcher = {});
+    explicit AgentController(
+        QString configPath,
+        BackendMode backendMode = BackendMode::X11,
+        LauncherFn launcher = {},
+        HotkeyTestFn hotkeyTester = {});
 
     VoidResult reloadConfig();
     void pause();
@@ -49,6 +55,7 @@ public:
     QList<Binding> listBindings() const;
     Result<QList<AppInfo>> listApplications();
     Result<QList<WindowInfo>> listWindows(const QString& filter = QString()) const;
+    VoidResult testHotkey(const QString& hotkey, const QString& excludeActionId = QString()) const;
     AgentControllerStatus status() const;
 
     void setApplicationDirs(QStringList dirs);
@@ -72,6 +79,7 @@ private:
     QList<AppInfo> m_applications;
     AgentControllerStatus m_status;
     LauncherFn m_launcher;
+    HotkeyTestFn m_hotkeyTester;
 };
 
 }

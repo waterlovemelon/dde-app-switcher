@@ -19,6 +19,7 @@ class SettingsController : public QObject {
     Q_PROPERTY(QVariantList applications READ applications NOTIFY applicationsChanged)
     Q_PROPERTY(QVariantMap backendStatus READ backendStatus NOTIFY backendStatusChanged)
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
+    Q_PROPERTY(QString lastErrorCode READ lastErrorCode NOTIFY lastErrorCodeChanged)
 
 public:
     explicit SettingsController(QObject* parent = nullptr);
@@ -31,6 +32,7 @@ public:
     QVariantList applications() const;
     QVariantMap backendStatus() const;
     QString lastError() const;
+    QString lastErrorCode() const;
 
     Q_INVOKABLE void refresh();
     Q_INVOKABLE bool saveBinding(const QVariantMap& binding);
@@ -45,6 +47,7 @@ signals:
     void applicationsChanged();
     void backendStatusChanged();
     void lastErrorChanged();
+    void lastErrorCodeChanged();
 
 private:
     bool ensureAvailable();
@@ -54,6 +57,8 @@ private:
     void setApplications(const QVariantList& applications);
     void setBackendStatus(const QVariantMap& backendStatus);
     void setLastError(const QString& lastError);
+    void setLastErrorCode(const QString& lastErrorCode);
+    void setLastErrorResult(const AgentCallResult& result);
     bool applyOperationResult(const AgentCallResult& result);
     void clearData();
 
@@ -65,6 +70,7 @@ private:
     QVariantList m_applications;
     QVariantMap m_backendStatus;
     QString m_lastError;
+    QString m_lastErrorCode;
 };
 
 }

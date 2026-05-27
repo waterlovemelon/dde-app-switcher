@@ -286,6 +286,7 @@ Item {
             Layout.preferredHeight: visible ? Math.max(42, errorMessage.implicitHeight + 22) : 0
             radius: 12
             visible: controller.lastError.length > 0
+                     && controller.lastErrorCode !== "hotkey_backend_unavailable"
             color: "#fff1e9"
             border.width: 1
             border.color: "#e2b199"
@@ -329,6 +330,13 @@ Item {
             return normalize(value).length > 0
         }
 
+        function canSave() {
+            return isValidId(idField.text)
+                   && isValidRequiredText(hotkeyField.text)
+                   && isValidRequiredText(desktopIdField.text)
+                   && !hotkeyField.conflict
+        }
+
         function openForBinding(binding) {
             originalBinding = copyBinding(binding)
             originalId = page.displayText(binding.id, "")
@@ -336,6 +344,9 @@ Item {
             idField.text = originalId
             enabledField.checked = binding.enabled === undefined ? true : binding.enabled
             hotkeyField.text = page.displayText(binding.hotkey, "")
+            hotkeyField.excludeActionId = originalId
+            hotkeyField.statusText = ""
+            hotkeyField.conflict = false
             desktopIdField.text = page.displayText(binding.desktop_id, "")
             var strategy = page.strategyValue(binding)
             strategyField.currentIndex = Math.max(0, strategyField.indexOfValue(strategy))
@@ -379,10 +390,11 @@ Item {
                 }
 
                 FieldLabel { text: qsTr("Hotkey") }
-                TextField {
+                HotkeyRecorder {
                     id: hotkeyField
                     Layout.fillWidth: true
                     placeholderText: qsTr("Alt+Return")
+                    controller: page.controller
                 }
 
                 FieldLabel { text: qsTr("Desktop ID") }
@@ -451,10 +463,14 @@ Item {
 
                 Button {
                     text: qsTr("Save")
-                    enabled: editorDialog.isValidId(idField.text)
-                             && editorDialog.isValidRequiredText(hotkeyField.text)
-                             && editorDialog.isValidRequiredText(desktopIdField.text)
+                    enabled: editorDialog.canSave()
                     onClicked: {
+                        hotkeyField.testCurrentHotkey()
+                        if (hotkeyField.conflict) {
+                            editorDialog.errorText = page.displayText(hotkeyField.statusText, qsTr("Hotkey validation failed."))
+                            return
+                        }
+
                         var binding = editorDialog.copyBinding(editorDialog.originalBinding)
                         binding.id = editorDialog.normalize(idField.text)
                         binding.enabled = enabledField.checked

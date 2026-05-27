@@ -161,6 +161,109 @@ private slots:
         QCOMPARE(triggered.errorCode, QString("app_not_found"));
         QCOMPARE(triggered.message, QString("binding not found"));
     }
+
+    void testHotkeyRejectsInvalidHotkeys()
+    {
+        AgentController controller("/path/that/uses/defaults.json", AgentController::BackendMode::Disabled);
+        QVERIFY(controller.reloadConfig().ok);
+
+        const auto tested = controller.testHotkey("Alt");
+
+        QVERIFY(!tested.ok);
+        QCOMPARE(tested.errorCode, QString("hotkey_invalid"));
+    }
+
+    void testHotkeyDetectsDuplicateConfigBindingExceptExcludedAction()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString configPath = dir.path() + "/config.json";
+
+        Config config = Config::defaults();
+        Binding terminal;
+        terminal.id = "terminal";
+        terminal.hotkey = "Ctrl+Alt+Enter";
+        config.bindings.append(terminal);
+        Binding browser;
+        browser.id = "browser";
+        browser.hotkey = "Meta+B";
+        config.bindings.append(browser);
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        AgentController controller(configPath, AgentController::BackendMode::Disabled);
+        QVERIFY(controller.reloadConfig().ok);
+
+        const auto conflicting = controller.testHotkey("alt + control + return", "browser");
+        QVERIFY(!conflicting.ok);
+        QCOMPARE(conflicting.errorCode, QString("hotkey_conflict"));
+        QVERIFY(conflicting.message.contains("terminal"));
+
+        const auto excluded = controller.testHotkey("Alt+Ctrl+Return", "terminal");
+        QVERIFY2(excluded.ok, qPrintable(excluded.message));
+    }
+
+    void testHotkeyUsesBackendTesterAfterConfigChecks()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString configPath = dir.path() + "/config.json";
+
+        Config config = Config::defaults();
+        Binding terminal;
+        terminal.id = "terminal";
+        terminal.hotkey = "Alt+Return";
+        config.bindings.append(terminal);
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        QString testedSequence;
+        AgentController controller(
+            configPath,
+            AgentController::BackendMode::Disabled,
+            {},
+            [&testedSequence](const Hotkey& hotkey) {
+                testedSequence = hotkey.sequence;
+                return VoidResult::success();
+            });
+        QVERIFY(controller.reloadConfig().ok);
+
+        const auto available = controller.testHotkey("Meta+Space", QString());
+        QVERIFY2(available.ok, qPrintable(available.message));
+        QCOMPARE(testedSequence, QString("Meta+Space"));
+
+        const auto conflict = controller.testHotkey("Alt+Enter", QString());
+        QVERIFY(!conflict.ok);
+        QCOMPARE(conflict.errorCode, QString("hotkey_conflict"));
+        QCOMPARE(testedSequence, QString("Meta+Space"));
+    }
+
+    void testHotkeyDoesNotBackendTestUnchangedExcludedBinding()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString configPath = dir.path() + "/config.json";
+
+        Config config = Config::defaults();
+        Binding terminal;
+        terminal.id = "terminal";
+        terminal.hotkey = "Alt+Return";
+        config.bindings.append(terminal);
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        bool backendTesterCalled = false;
+        AgentController controller(
+            configPath,
+            AgentController::BackendMode::Disabled,
+            {},
+            [&backendTesterCalled](const Hotkey&) {
+                backendTesterCalled = true;
+                return VoidResult::failure("hotkey_conflict", "self-conflict");
+            });
+        QVERIFY(controller.reloadConfig().ok);
+
+        const auto tested = controller.testHotkey("Alt+Enter", "terminal");
+        QVERIFY2(tested.ok, qPrintable(tested.message));
+        QVERIFY(!backendTesterCalled);
+    }
 };
 
 QTEST_MAIN(AgentControllerTest)

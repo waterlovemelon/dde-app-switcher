@@ -1,5 +1,7 @@
+#include <QFile>
 #include <QResource>
 #include <QTest>
+#include <QString>
 
 class SettingsQmlResourceTest : public QObject {
     Q_OBJECT
@@ -24,6 +26,27 @@ private slots:
         const QResource applicationPickerQml(":/qml/ApplicationPicker.qml");
         QVERIFY(applicationPickerQml.isValid());
         QVERIFY(applicationPickerQml.size() > 0);
+    }
+
+    void hotkeyRecorderQmlIsEmbedded()
+    {
+        const QResource hotkeyRecorderQml(":/qml/HotkeyRecorder.qml");
+        QVERIFY(hotkeyRecorderQml.isValid());
+        QVERIFY(hotkeyRecorderQml.size() > 0);
+    }
+
+    void hotkeyRecorderMapsModifiedTextKeysWithoutEventText()
+    {
+        QFile hotkeyRecorderQml(QFINDTESTDATA("../../src/settings/qml/HotkeyRecorder.qml"));
+        QVERIFY(hotkeyRecorderQml.open(QIODevice::ReadOnly | QIODevice::Text));
+
+        const QString qml = QString::fromUtf8(hotkeyRecorderQml.readAll());
+        QVERIFY(qml.contains("event.key >= Qt.Key_A"));
+        QVERIFY(qml.contains("event.key <= Qt.Key_Z"));
+        QVERIFY(qml.contains("event.key >= Qt.Key_0"));
+        QVERIFY(qml.contains("event.key <= Qt.Key_9"));
+        QVERIFY(qml.contains("Qt.Key_Minus"));
+        QVERIFY(qml.contains("event.text && event.text.length === 1"));
     }
 };
 

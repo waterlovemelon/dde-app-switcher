@@ -141,11 +141,13 @@ QVariantMap AgentDBusService::RemoveBinding(const QString& bindingId)
 
 QVariantMap AgentDBusService::TestHotkey(const QString& hotkey, const QString& excludeId)
 {
-    Q_UNUSED(hotkey)
-    Q_UNUSED(excludeId)
-    const QVariantMap result = unsupported("TestHotkey");
-    emitError(result);
-    return result;
+    const auto tested = m_controller.testHotkey(hotkey, excludeId);
+    if (!tested.ok) {
+        const QVariantMap result = failureResult(tested.errorCode, tested.message);
+        emitError(result);
+        return result;
+    }
+    return successResult("hotkey available");
 }
 
 QVariantMap AgentDBusService::ListApplications()

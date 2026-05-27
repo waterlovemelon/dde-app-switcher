@@ -15,11 +15,12 @@
 
 namespace deepswitch {
 
-AgentController::AgentController(QString configPath, BackendMode backendMode, LauncherFn launcher)
+AgentController::AgentController(QString configPath, BackendMode backendMode, LauncherFn launcher, HotkeyTestFn hotkeyTester)
     : m_configPath(std::move(configPath))
     , m_backendMode(backendMode)
     , m_config(Config::defaults())
     , m_launcher(std::move(launcher))
+    , m_hotkeyTester(std::move(hotkeyTester))
 {
     if (!m_launcher) {
         m_launcher = [](const AppInfo& appInfo) {
@@ -196,6 +197,64 @@ Result<QList<WindowInfo>> AgentController::listWindows(const QString& filter) co
         }
     }
     return Result<QList<WindowInfo>>::success(filtered);
+}
+
+VoidResult AgentController::testHotkey(const QString& hotkey, const QString& excludeActionId) const
+{
+    const auto parsed = Hotkey::parse(hotkey);
+    if (!parsed.ok) {
+        return VoidResult::failure("hotkey_invalid", parsed.message);
+    }
+
+    bool matchesExcludedBinding = false;
+    for (const Binding& binding : m_config.bindings) {
+        if (!binding.enabled || binding.hotkey.trimmed().isEmpty()) {
+            continue;
+        }
+
+        const auto candidate = Hotkey::parse(binding.hotkey);
+        if (!candidate.ok) {
+            continue;
+        }
+
+        if (binding.id == excludeActionId) {
+            matchesExcludedBinding = candidate.value.sequence == parsed.value.sequence;
+            continue;
+        }
+
+        if (candidate.value.sequence == parsed.value.sequence) {
+            return VoidResult::failure(
+                "hotkey_conflict",
+                "Hotkey conflicts with binding '" + binding.id + "'.");
+        }
+    }
+
+    if (matchesExcludedBinding) {
+        return VoidResult::success();
+    }
+
+    if (m_hotkeyTester) {
+        return m_hotkeyTester(parsed.value);
+    }
+
+    if (m_backendMode == BackendMode::Disabled) {
+        return VoidResult::failure("hotkey_backend_unavailable", "Hotkey backend is unavailable.");
+    }
+
+    X11Connection connection;
+    const auto opened = connection.open();
+    if (!opened.ok) {
+        return VoidResult::failure("hotkey_backend_unavailable", opened.message);
+    }
+
+    X11HotkeyBackend hotkeys(connection);
+    const auto registered = hotkeys.registerHotkey(parsed.value, "__deepswitch_test__");
+    if (!registered.ok) {
+        return registered;
+    }
+
+    hotkeys.unregisterHotkey(parsed.value);
+    return VoidResult::success();
 }
 
 AgentControllerStatus AgentController::status() const
