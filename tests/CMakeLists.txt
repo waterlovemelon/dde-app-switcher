@@ -17,3 +17,6 @@ add_deepswitch_test(test_action_engine core/test_action_engine.cpp)
 
 add_deepswitch_test(test_agent_types ipc/test_agent_types.cpp)
 target_link_libraries(test_agent_types PRIVATE deepswitch_ipc)
+
+add_deepswitch_test(test_agent_controller agent/test_agent_controller.cpp)
+target_link_libraries(test_agent_controller PRIVATE deepswitch_agent)

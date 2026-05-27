@@ -62,11 +62,26 @@ target_link_libraries(deepswitch_ipc PUBLIC
     Qt6::Core
 )
 
+add_library(deepswitch_agent
+    src/agent/AgentController.cpp
+)
+
+target_include_directories(deepswitch_agent PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(deepswitch_agent PUBLIC
+    deepswitch_core
+    deepswitch_x11
+    Qt6::Core
+)
+
 add_executable(deepswitch-agent
     src/agent/main.cpp
 )
 
 target_link_libraries(deepswitch-agent PRIVATE
+    deepswitch_agent
     deepswitch_core
     deepswitch_ipc
     deepswitch_x11
