@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Test Gui)
+find_package(Qt6 REQUIRED COMPONENTS Core Test Gui DBus)
 find_package(X11 REQUIRED)
 
 enable_testing()
@@ -64,6 +64,7 @@ target_link_libraries(deepswitch_ipc PUBLIC
 
 add_library(deepswitch_agent
     src/agent/AgentController.cpp
+    src/ipc/AgentDBusService.cpp
 )
 
 target_include_directories(deepswitch_agent PUBLIC
@@ -72,6 +73,7 @@ target_include_directories(deepswitch_agent PUBLIC
 
 target_link_libraries(deepswitch_agent PUBLIC
     deepswitch_core
+    deepswitch_ipc
     deepswitch_x11
     Qt6::Core
 )
@@ -86,6 +88,7 @@ target_link_libraries(deepswitch-agent PRIVATE
     deepswitch_ipc
     deepswitch_x11
     Qt6::Core
+    Qt6::DBus
 )
 
 add_subdirectory(tests)

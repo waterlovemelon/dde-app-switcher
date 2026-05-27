@@ -1,8 +1,10 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QDBusConnection>
+#include <QDBusError>
 #include <QDir>
 #include <QTextStream>
-#include <QThread>
+#include <QTimer>
 
 #include "agent/AgentController.h"
 #include "backends/x11/X11Connection.h"
@@ -10,6 +12,7 @@
 #include "core/AppInfo.h"
 #include "core/Config.h"
 #include "core/WindowInfo.h"
+#include "ipc/AgentDBusService.h"
 
 using namespace deepswitch;
 
@@ -106,6 +109,25 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    AgentDBusService dbusService(controller);
+    QDBusConnection sessionBus = QDBusConnection::sessionBus();
+    if (!sessionBus.registerService(AgentDBusService::ServiceName)) {
+        err << "fatal: failed to register D-Bus service "
+            << AgentDBusService::ServiceName << ": "
+            << sessionBus.lastError().message() << "\n";
+        return 2;
+    }
+
+    if (!sessionBus.registerObject(AgentDBusService::ObjectPath,
+            &dbusService,
+            QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals)) {
+        err << "fatal: failed to register D-Bus object "
+            << AgentDBusService::ObjectPath << ": "
+            << sessionBus.lastError().message() << "\n";
+        sessionBus.unregisterService(AgentDBusService::ServiceName);
+        return 2;
+    }
+
     X11Connection connection;
     const auto opened = connection.open();
     if (!opened.ok) {
@@ -138,19 +160,30 @@ int main(int argc, char *argv[])
     out << "listening for hotkeys; press Ctrl+C to exit\n";
     out.flush();
 
-    while (true) {
+    QTimer pollTimer;
+    QObject::connect(&pollTimer, &QTimer::timeout, [&]() {
         const QString action = hotkeys.pollTriggeredAction();
         if (!action.isEmpty()) {
             const auto triggered = controller.triggerHotkeyAction(action);
             if (triggered.ok) {
                 out << triggered.value << "\n";
+                emit dbusService.HotkeyTriggered(action, {
+                    { "ok", true },
+                    { "message", triggered.value },
+                });
             } else {
                 err << triggered.errorCode << ": " << triggered.message << "\n";
+                emit dbusService.HotkeyTriggered(action, {
+                    { "ok", false },
+                    { "error_code", triggered.errorCode },
+                    { "message", triggered.message },
+                });
+                emit dbusService.ErrorOccurred(triggered.errorCode, triggered.message);
             }
             out.flush();
         }
-        QThread::msleep(20);
-    }
+    });
+    pollTimer.start(20);
 
-    return 0;
+    return app.exec();
 }
