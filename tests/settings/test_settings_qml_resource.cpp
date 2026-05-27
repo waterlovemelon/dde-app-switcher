@@ -11,6 +11,13 @@ private slots:
         QVERIFY(mainQml.isValid());
         QVERIFY(mainQml.size() > 0);
     }
+
+    void bindingsPageQmlIsEmbedded()
+    {
+        const QResource bindingsPageQml(":/qml/BindingsPage.qml");
+        QVERIFY(bindingsPageQml.isValid());
+        QVERIFY(bindingsPageQml.size() > 0);
+    }
 };
 
 QTEST_MAIN(SettingsQmlResourceTest)

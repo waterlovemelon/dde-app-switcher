@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/qml">
         <file>Main.qml</file>
+        <file>BindingsPage.qml</file>
     </qresource>
 </RCC>

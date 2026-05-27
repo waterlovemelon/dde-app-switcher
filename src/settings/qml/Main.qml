@@ -195,70 +195,9 @@ ApplicationWindow {
                 currentIndex: window.selectedPage
 
                 SectionCard {
-                    ListView {
+                    BindingsPage {
                         anchors.fill: parent
-                        anchors.margins: 18
-                        spacing: 10
-                        clip: true
-                        model: settingsController.bindings.length > 0 ? settingsController.bindings : [ { "id": qsTr("No bindings loaded"), "hotkey": qsTr("Later tasks will add editing."), "desktop_id": "" } ]
-
-                        delegate: SectionCard {
-                            required property var modelData
-
-                            width: ListView.view.width
-                            height: 72
-                            color: "#ffffff"
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 14
-                                spacing: 14
-
-                                Rectangle {
-                                    Layout.preferredWidth: 42
-                                    Layout.preferredHeight: 42
-                                    radius: 12
-                                    color: "#e5f0f3"
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "DS"
-                                        color: "#225365"
-                                        font.pixelSize: 18
-                                    }
-                                }
-
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 2
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: modelData.id || qsTr("Unnamed binding")
-                                        color: "#17313c"
-                                        font.pixelSize: 15
-                                        font.weight: Font.DemiBold
-                                        elide: Text.ElideRight
-                                    }
-
-                                    MutedText {
-                                        Layout.fillWidth: true
-                                        text: modelData.desktop_id || qsTr("Application target not set")
-                                    }
-                                }
-
-                                Label {
-                                    text: modelData.hotkey || qsTr("Unassigned")
-                                    color: "#214a58"
-                                    padding: 8
-                                    background: Rectangle {
-                                        radius: 8
-                                        color: "#eef6f8"
-                                        border.color: "#d4e4e9"
-                                    }
-                                }
-                            }
-                        }
+                        controller: settingsController
                     }
                 }
 
