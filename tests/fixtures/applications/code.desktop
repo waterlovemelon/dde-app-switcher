@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Visual Studio Code
+Exec=/usr/bin/code --unity-launch %F
+Icon=code
+StartupWMClass=code
+Categories=Development;IDE;
+Terminal=false
+NoDisplay=false
