@@ -50,6 +50,7 @@ target_link_libraries(deepswitch_x11 PUBLIC
 )
 
 add_library(deepswitch_ipc
+    src/ipc/AgentDBusClient.cpp
     src/ipc/AgentTypes.cpp
 )
 
@@ -59,6 +60,20 @@ target_include_directories(deepswitch_ipc PUBLIC
 
 target_link_libraries(deepswitch_ipc PUBLIC
     deepswitch_core
+    Qt6::Core
+    Qt6::DBus
+)
+
+add_library(deepswitch_settings
+    src/settings/SettingsController.cpp
+)
+
+target_include_directories(deepswitch_settings PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(deepswitch_settings PUBLIC
+    deepswitch_ipc
     Qt6::Core
 )
 

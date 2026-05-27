@@ -2,6 +2,7 @@
 
 #include "agent/AgentController.h"
 #include "core/ConfigManager.h"
+#include "ipc/AgentDBusContract.h"
 #include "ipc/AgentDBusService.h"
 
 #include <QDBusConnection>
@@ -27,11 +28,12 @@ private slots:
             const QMetaClassInfo info = metaObject.classInfo(i);
             if (QString::fromLatin1(info.name()) == "D-Bus Interface") {
                 foundInterface = true;
-                QCOMPARE(QString::fromLatin1(info.value()), QString(AgentDBusService::InterfaceName));
+                QCOMPARE(QString::fromLatin1(info.value()), QString(AgentDBusContract::InterfaceName));
             }
         }
         QVERIFY(foundInterface);
-        QCOMPARE(QString(AgentDBusService::InterfaceName), QString("org.deepin.DeepSwitch.Agent"));
+        QCOMPARE(QString(AgentDBusService::InterfaceName), QString(AgentDBusContract::InterfaceName));
+        QCOMPARE(QString(AgentDBusContract::InterfaceName), QString("org.deepin.DeepSwitch.Agent"));
     }
 
     void exposesStatusAndControllerBackedLists()
@@ -96,7 +98,7 @@ private slots:
         QCOMPARE(removeBinding.value("ok").toBool(), false);
         QCOMPARE(removeBinding.value("error_code").toString(), QString("not_implemented"));
 
-        const QVariantMap testHotkey = service.TestHotkey("Alt+Return");
+        const QVariantMap testHotkey = service.TestHotkey("Alt+Return", "terminal");
         QCOMPARE(testHotkey.value("ok").toBool(), false);
         QCOMPARE(testHotkey.value("error_code").toString(), QString("not_implemented"));
 
@@ -140,7 +142,7 @@ private slots:
             QSKIP(qPrintable("cannot register temporary object: " + bus.lastError().message()));
         }
 
-        QDBusInterface iface(serviceName, objectPath, AgentDBusService::InterfaceName, bus);
+        QDBusInterface iface(serviceName, objectPath, AgentDBusContract::InterfaceName, bus);
         QVERIFY2(iface.isValid(), qPrintable(iface.lastError().message()));
 
         QDBusReply<QVariantMap> reply = iface.call("GetStatus");

@@ -12,6 +12,7 @@
 #include "core/AppInfo.h"
 #include "core/Config.h"
 #include "core/WindowInfo.h"
+#include "ipc/AgentDBusContract.h"
 #include "ipc/AgentDBusService.h"
 
 using namespace deepswitch;
@@ -111,20 +112,20 @@ int main(int argc, char *argv[])
 
     AgentDBusService dbusService(controller);
     QDBusConnection sessionBus = QDBusConnection::sessionBus();
-    if (!sessionBus.registerService(AgentDBusService::ServiceName)) {
+    if (!sessionBus.registerService(AgentDBusContract::ServiceName)) {
         err << "fatal: failed to register D-Bus service "
-            << AgentDBusService::ServiceName << ": "
+            << AgentDBusContract::ServiceName << ": "
             << sessionBus.lastError().message() << "\n";
         return 2;
     }
 
-    if (!sessionBus.registerObject(AgentDBusService::ObjectPath,
+    if (!sessionBus.registerObject(AgentDBusContract::ObjectPath,
             &dbusService,
             QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals)) {
         err << "fatal: failed to register D-Bus object "
-            << AgentDBusService::ObjectPath << ": "
+            << AgentDBusContract::ObjectPath << ": "
             << sessionBus.lastError().message() << "\n";
-        sessionBus.unregisterService(AgentDBusService::ServiceName);
+        sessionBus.unregisterService(AgentDBusContract::ServiceName);
         return 2;
     }
 

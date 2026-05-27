@@ -139,9 +139,10 @@ QVariantMap AgentDBusService::RemoveBinding(const QString& bindingId)
     return result;
 }
 
-QVariantMap AgentDBusService::TestHotkey(const QString& hotkey)
+QVariantMap AgentDBusService::TestHotkey(const QString& hotkey, const QString& excludeId)
 {
     Q_UNUSED(hotkey)
+    Q_UNUSED(excludeId)
     const QVariantMap result = unsupported("TestHotkey");
     emitError(result);
     return result;

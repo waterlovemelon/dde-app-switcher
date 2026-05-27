@@ -1,0 +1,70 @@
+#pragma once
+
+#include "ipc/AgentDBusClient.h"
+
+#include <QObject>
+#include <QString>
+#include <QVariantList>
+#include <QVariantMap>
+
+#include <memory>
+
+namespace deepswitch {
+
+class SettingsController : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
+    Q_PROPERTY(QVariantMap status READ status NOTIFY statusChanged)
+    Q_PROPERTY(QVariantList bindings READ bindings NOTIFY bindingsChanged)
+    Q_PROPERTY(QVariantList applications READ applications NOTIFY applicationsChanged)
+    Q_PROPERTY(QVariantMap backendStatus READ backendStatus NOTIFY backendStatusChanged)
+    Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
+
+public:
+    explicit SettingsController(QObject* parent = nullptr);
+    explicit SettingsController(AgentClientInterface& client, QObject* parent = nullptr);
+    ~SettingsController() override;
+
+    bool connected() const;
+    QVariantMap status() const;
+    QVariantList bindings() const;
+    QVariantList applications() const;
+    QVariantMap backendStatus() const;
+    QString lastError() const;
+
+    Q_INVOKABLE void refresh();
+    Q_INVOKABLE bool saveBinding(const QVariantMap& binding);
+    Q_INVOKABLE bool removeBinding(const QString& bindingId);
+    Q_INVOKABLE bool testHotkey(const QString& hotkey, const QString& excludeId = QString());
+    Q_INVOKABLE bool launchApp(const QString& desktopId);
+
+signals:
+    void connectedChanged();
+    void statusChanged();
+    void bindingsChanged();
+    void applicationsChanged();
+    void backendStatusChanged();
+    void lastErrorChanged();
+
+private:
+    bool ensureAvailable();
+    void setConnected(bool connected);
+    void setStatus(const QVariantMap& status);
+    void setBindings(const QVariantList& bindings);
+    void setApplications(const QVariantList& applications);
+    void setBackendStatus(const QVariantMap& backendStatus);
+    void setLastError(const QString& lastError);
+    bool applyOperationResult(const AgentCallResult& result);
+    void clearData();
+
+    std::unique_ptr<AgentClientInterface> m_ownedClient;
+    AgentClientInterface* m_client = nullptr;
+    bool m_connected = false;
+    QVariantMap m_status;
+    QVariantList m_bindings;
+    QVariantList m_applications;
+    QVariantMap m_backendStatus;
+    QString m_lastError;
+};
+
+}

@@ -21,5 +21,11 @@ target_link_libraries(test_agent_types PRIVATE deepswitch_ipc)
 add_deepswitch_test(test_agent_dbus_service ipc/test_agent_dbus_service.cpp)
 target_link_libraries(test_agent_dbus_service PRIVATE deepswitch_agent deepswitch_ipc Qt6::DBus)
 
+add_deepswitch_test(test_agent_dbus_client ipc/test_agent_dbus_client.cpp)
+target_link_libraries(test_agent_dbus_client PRIVATE deepswitch_ipc Qt6::DBus)
+
 add_deepswitch_test(test_agent_controller agent/test_agent_controller.cpp)
 target_link_libraries(test_agent_controller PRIVATE deepswitch_agent)
+
+add_deepswitch_test(test_settings_controller settings/test_settings_controller.cpp)
+target_link_libraries(test_settings_controller PRIVATE deepswitch_settings)

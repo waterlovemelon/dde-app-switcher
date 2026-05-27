@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ipc/AgentDBusContract.h"
+
 #include <QObject>
 #include <QString>
 #include <QVariantList>
@@ -14,9 +16,9 @@ class AgentDBusService : public QObject {
     Q_CLASSINFO("D-Bus Interface", "org.deepin.DeepSwitch.Agent")
 
 public:
-    static constexpr const char* ServiceName = "org.deepin.DeepSwitch";
-    static constexpr const char* InterfaceName = "org.deepin.DeepSwitch.Agent";
-    static constexpr const char* ObjectPath = "/org/deepin/DeepSwitch";
+    static constexpr const char* ServiceName = AgentDBusContract::ServiceName;
+    static constexpr const char* InterfaceName = AgentDBusContract::InterfaceName;
+    static constexpr const char* ObjectPath = AgentDBusContract::ObjectPath;
 
     explicit AgentDBusService(AgentController& controller, QObject* parent = nullptr);
 
@@ -28,7 +30,7 @@ public slots:
     QVariantList ListBindings() const;
     QVariantMap SetBinding(const QVariantMap& binding);
     QVariantMap RemoveBinding(const QString& bindingId);
-    QVariantMap TestHotkey(const QString& hotkey);
+    QVariantMap TestHotkey(const QString& hotkey, const QString& excludeId);
     QVariantMap ListApplications();
     QVariantMap ListWindows(const QString& filter = QString());
     QVariantMap ActivateWindow(qulonglong windowId);
