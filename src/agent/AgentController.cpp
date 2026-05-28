@@ -270,7 +270,8 @@ Result<QString> AgentController::triggerAction(const QString& actionId, TriggerM
             return Result<QString>::failure(activated.errorCode, activated.message);
         }
         updateState(AgentControllerState::Running);
-        return Result<QString>::success("activated " + QString::number(decision.windowId));
+        const QString verb = decision.type == ActionType::Cycle ? QString("cycled") : QString("focused");
+        return Result<QString>::success(verb + " " + QString::number(decision.windowId));
     }
 
     updateState(AgentControllerState::Degraded, decision.message);
@@ -409,6 +410,11 @@ AgentControllerStatus AgentController::status() const
     status.bindingStatuses = deriveBindingStatuses(m_config.bindings, applicationIds, m_registeredHotkeyActionIds, &warnings);
     status.warnings = warnings;
     return status;
+}
+
+bool AgentController::showOverlay() const
+{
+    return m_config.general.showOverlay;
 }
 
 void AgentController::setApplicationDirs(QStringList dirs)

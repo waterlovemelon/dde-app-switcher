@@ -29,12 +29,19 @@ target_link_libraries(test_agent_dbus_client PRIVATE deepswitch_ipc Qt6::DBus)
 add_deepswitch_test(test_agent_controller agent/test_agent_controller.cpp)
 target_link_libraries(test_agent_controller PRIVATE deepswitch_agent)
 
+add_deepswitch_test(test_agent_overlay_static agent/test_agent_overlay_static.cpp)
+
 add_deepswitch_test(test_settings_controller settings/test_settings_controller.cpp)
 target_link_libraries(test_settings_controller PRIVATE deepswitch_settings)
 
 add_deepswitch_test(test_settings_qml_resource
     settings/test_settings_qml_resource.cpp
     ${CMAKE_SOURCE_DIR}/src/settings/qml/qml.qrc
+)
+
+add_deepswitch_test(test_overlay_qml_resource
+    overlay/test_overlay_qml_resource.cpp
+    ${CMAKE_SOURCE_DIR}/src/overlay/qml/qml.qrc
 )
 
 add_deepswitch_test(test_linux_desktop_entry packaging/test_linux_desktop_entry.cpp)

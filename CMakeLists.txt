@@ -116,6 +116,28 @@ install(TARGETS deepswitch-agent
 )
 
 if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
+    add_executable(deepswitch-overlay
+        src/overlay/main.cpp
+        src/overlay/OverlayWindow.cpp
+        src/overlay/OverlayWindow.h
+        src/overlay/qml/qml.qrc
+    )
+
+    target_include_directories(deepswitch-overlay PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+
+    target_link_libraries(deepswitch-overlay PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Qml
+        Qt6::Quick
+    )
+
+    install(TARGETS deepswitch-overlay
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
     add_executable(deepswitch-settings
         src/settings/main.cpp
         src/settings/qml/qml.qrc
@@ -143,7 +165,7 @@ if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
         DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
     )
 else()
-    message(STATUS "Qt6 QML/Quick development packages not found; skipping deepswitch-settings GUI target and launcher entry install")
+    message(STATUS "Qt6 QML/Quick development packages not found; skipping deepswitch-overlay, deepswitch-settings GUI target and launcher entry install")
 endif()
 
 add_subdirectory(tests)

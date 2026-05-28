@@ -3,6 +3,8 @@
 #include <QDBusConnection>
 #include <QDBusError>
 #include <QDir>
+#include <QFileInfo>
+#include <QProcess>
 #include <QTextStream>
 #include <QTimer>
 
@@ -17,6 +19,46 @@
 #include "ipc/AgentDBusService.h"
 
 using namespace deepswitch;
+
+namespace {
+
+QString overlayKindForResult(const Result<QString>& triggered)
+{
+    if (!triggered.ok) {
+        return QStringLiteral("failed");
+    }
+
+    const QString message = triggered.value.toLower();
+    if (message.startsWith(QStringLiteral("launched"))) {
+        return QStringLiteral("launched");
+    }
+    if (message.startsWith(QStringLiteral("cycled"))) {
+        return QStringLiteral("cycled");
+    }
+    if (message.startsWith(QStringLiteral("focused"))) {
+        return QStringLiteral("focused");
+    }
+    return QStringLiteral("focused");
+}
+
+bool launchOverlayHint(const Result<QString>& triggered)
+{
+    const QString executable = QCoreApplication::applicationDirPath() + QDir::separator() + QStringLiteral("deepswitch-overlay");
+    const QFileInfo overlayInfo(executable);
+    if (!overlayInfo.exists() || !overlayInfo.isExecutable()) {
+        return false;
+    }
+
+    const QString message = triggered.ok ? triggered.value : triggered.message;
+    return QProcess::startDetached(executable, {
+        QStringLiteral("--kind"),
+        overlayKindForResult(triggered),
+        QStringLiteral("--message"),
+        message,
+    });
+}
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -172,6 +214,9 @@ int main(int argc, char *argv[])
         const QString action = hotkeys.pollTriggeredAction();
         if (!action.isEmpty()) {
             const auto triggered = controller.triggerHotkeyAction(action);
+            if (controller.showOverlay()) {
+                launchOverlayHint(triggered);
+            }
             if (triggered.ok) {
                 out << triggered.value << "\n";
                 emit dbusService.HotkeyTriggered(action, {

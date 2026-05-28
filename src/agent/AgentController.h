@@ -67,6 +67,7 @@ public:
     Result<QList<WindowInfo>> listWindows(const QString& filter = QString()) const;
     VoidResult testHotkey(const QString& hotkey, const QString& excludeActionId = QString()) const;
     AgentControllerStatus status() const;
+    bool showOverlay() const;
 
     void setApplicationDirs(QStringList dirs);
     Result<int> registerHotkeys(X11HotkeyBackend& hotkeys, QStringList* messages = nullptr);

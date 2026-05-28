@@ -98,6 +98,26 @@ private slots:
         QCOMPARE(controller.status().state, AgentControllerState::Running);
     }
 
+    void showOverlayReflectsGeneralConfig()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString configPath = dir.path() + "/config.json";
+
+        Config config = Config::defaults();
+        config.general.showOverlay = false;
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        AgentController controller(configPath, AgentController::BackendMode::Disabled);
+        QVERIFY(controller.reloadConfig().ok);
+        QCOMPARE(controller.showOverlay(), false);
+
+        config.general.showOverlay = true;
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+        QVERIFY(controller.reloadConfig().ok);
+        QCOMPARE(controller.showOverlay(), true);
+    }
+
     void pauseAndResumeUpdateStatus()
     {
         AgentController controller("/path/that/uses/defaults.json", AgentController::BackendMode::Disabled);
