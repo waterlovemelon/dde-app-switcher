@@ -18,6 +18,7 @@ class SettingsController : public QObject {
     Q_PROPERTY(QVariantMap status READ status NOTIFY statusChanged)
     Q_PROPERTY(QVariantList bindings READ bindings NOTIFY bindingsChanged)
     Q_PROPERTY(QVariantList applications READ applications NOTIFY applicationsChanged)
+    Q_PROPERTY(QVariantList windowDiagnostics READ windowDiagnostics NOTIFY windowDiagnosticsChanged)
     Q_PROPERTY(QVariantMap backendStatus READ backendStatus NOTIFY backendStatusChanged)
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
     Q_PROPERTY(QString lastErrorCode READ lastErrorCode NOTIFY lastErrorCodeChanged)
@@ -33,6 +34,7 @@ public:
     QVariantMap status() const;
     QVariantList bindings() const;
     QVariantList applications() const;
+    QVariantList windowDiagnostics() const;
     QVariantMap backendStatus() const;
     QString lastError() const;
     QString lastErrorCode() const;
@@ -43,6 +45,7 @@ public:
     Q_INVOKABLE bool removeBinding(const QString& bindingId);
     Q_INVOKABLE bool testHotkey(const QString& hotkey, const QString& excludeId = QString());
     Q_INVOKABLE bool launchApp(const QString& desktopId);
+    Q_INVOKABLE bool refreshWindowDiagnostics(const QString& appId);
     Q_INVOKABLE bool setAutostartEnabled(bool enabled);
 
 signals:
@@ -50,6 +53,7 @@ signals:
     void statusChanged();
     void bindingsChanged();
     void applicationsChanged();
+    void windowDiagnosticsChanged();
     void backendStatusChanged();
     void lastErrorChanged();
     void lastErrorCodeChanged();
@@ -61,6 +65,7 @@ private:
     void setStatus(const QVariantMap& status);
     void setBindings(const QVariantList& bindings);
     void setApplications(const QVariantList& applications);
+    void setWindowDiagnostics(const QVariantList& windows);
     void setBackendStatus(const QVariantMap& backendStatus);
     void setLastError(const QString& lastError);
     void setLastErrorCode(const QString& lastErrorCode);
@@ -78,6 +83,7 @@ private:
     QVariantMap m_status;
     QVariantList m_bindings;
     QVariantList m_applications;
+    QVariantList m_windowDiagnostics;
     QVariantMap m_backendStatus;
     QString m_lastError;
     QString m_lastErrorCode;

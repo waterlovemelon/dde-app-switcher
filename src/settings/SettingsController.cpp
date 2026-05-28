@@ -71,6 +71,11 @@ QVariantList SettingsController::applications() const
     return m_applications;
 }
 
+QVariantList SettingsController::windowDiagnostics() const
+{
+    return m_windowDiagnostics;
+}
+
 QVariantMap SettingsController::backendStatus() const
 {
     return m_backendStatus;
@@ -165,6 +170,26 @@ bool SettingsController::launchApp(const QString& desktopId)
     return applyOperationResult(m_client->launchApp(desktopId));
 }
 
+bool SettingsController::refreshWindowDiagnostics(const QString& appId)
+{
+    if (!ensureAvailable()) {
+        setWindowDiagnostics({});
+        return false;
+    }
+
+    const AgentCallResult result = m_client->listWindows(appId);
+    if (!result.ok) {
+        setWindowDiagnostics({});
+        setLastErrorResult(result);
+        return false;
+    }
+
+    setWindowDiagnostics(result.value.toList());
+    setLastError(QString());
+    setLastErrorCode(QString());
+    return true;
+}
+
 bool SettingsController::setAutostartEnabled(bool enabled)
 {
     ConfigManager configManager(m_configPath);
@@ -247,6 +272,15 @@ void SettingsController::setApplications(const QVariantList& applications)
     emit applicationsChanged();
 }
 
+void SettingsController::setWindowDiagnostics(const QVariantList& windows)
+{
+    if (m_windowDiagnostics == windows) {
+        return;
+    }
+    m_windowDiagnostics = windows;
+    emit windowDiagnosticsChanged();
+}
+
 void SettingsController::setBackendStatus(const QVariantMap& backendStatus)
 {
     if (m_backendStatus == backendStatus) {
@@ -297,6 +331,7 @@ void SettingsController::clearData()
     setBackendStatus({});
     setBindings({});
     setApplications({});
+    setWindowDiagnostics({});
 }
 
 void SettingsController::updateAutostartEnabled(bool enabled)

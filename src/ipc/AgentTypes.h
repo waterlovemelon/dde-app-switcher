@@ -70,6 +70,8 @@ struct WindowInfoDto {
     QString windowType;
     QString appId;
     bool skipTaskbar = false;
+    int matchScore = 0;
+    QVariantList matchEvidence;
 
     static WindowInfoDto fromCore(const WindowInfo& window);
     WindowInfo toCore() const;

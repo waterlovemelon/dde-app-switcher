@@ -75,6 +75,46 @@ QSet<QString> scanApplicationIds(const QStringList& applicationDirs, QStringList
     return ids;
 }
 
+std::optional<AppInfo> findKnownApplication(
+    const QString& desktopId,
+    const QList<AppInfo>& cachedApplications,
+    const QStringList& applicationDirs)
+{
+    for (const AppInfo& appInfo : cachedApplications) {
+        if (appInfo.desktopId == desktopId) {
+            return appInfo;
+        }
+    }
+
+    AppRegistry registry;
+    if (!applicationDirs.isEmpty()) {
+        registry.setApplicationDirs(applicationDirs);
+    }
+
+    const auto scanned = registry.scan();
+    if (!scanned.ok) {
+        return std::nullopt;
+    }
+
+    for (const AppInfo& appInfo : registry.listApplications()) {
+        if (appInfo.desktopId == desktopId) {
+            return appInfo;
+        }
+    }
+    return std::nullopt;
+}
+
+QList<MatchRule> matchRulesForApp(const QList<Binding>& bindings, const QString& desktopId)
+{
+    QList<MatchRule> rules;
+    for (const Binding& binding : bindings) {
+        if (binding.desktopId == desktopId) {
+            rules.append(binding.matchRules);
+        }
+    }
+    return rules;
+}
+
 QVariantList deriveBindingStatuses(
     const QList<Binding>& bindings,
     const QSet<QString>& applicationIds,
@@ -318,8 +358,22 @@ Result<QList<WindowInfo>> AgentController::listWindows(const QString& filter) co
         return listed;
     }
 
-    QList<WindowInfo> filtered;
     const QString needle = filter.trimmed();
+    const std::optional<AppInfo> appInfo = findKnownApplication(needle, m_applications, m_applicationDirs);
+    if (appInfo.has_value()) {
+        QList<WindowInfo> annotated;
+        annotated.reserve(listed.value.size());
+        const QList<MatchRule> rules = matchRulesForApp(m_config.bindings, appInfo->desktopId);
+        for (WindowInfo window : listed.value) {
+            const MatchResult match = AppMatcher::match(appInfo.value(), window, rules);
+            window.matchScore = match.totalScore;
+            window.matchEvidence = match.evidence;
+            annotated.append(window);
+        }
+        return Result<QList<WindowInfo>>::success(annotated);
+    }
+
+    QList<WindowInfo> filtered;
     for (const WindowInfo& window : listed.value) {
         if (window.appId == needle || window.wmClass == needle || window.instanceName == needle || window.title.contains(needle, Qt::CaseInsensitive)) {
             filtered.append(window);

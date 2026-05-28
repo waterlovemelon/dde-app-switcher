@@ -67,17 +67,41 @@ public:
             { "name", "Terminal" },
         },
     });
+    AgentCallResult windowsResult = AgentCallResult::success(QVariantList {
+        QVariantMap {
+            { "id", QVariant::fromValue<qulonglong>(42) },
+            { "title", "Terminal" },
+            { "wm_class", "deepin-terminal" },
+            { "match_score", 120 },
+            { "match_evidence", QVariantList {
+                  QVariantMap {
+                      { "rule_type", "wm_class" },
+                      { "value", "deepin-terminal" },
+                      { "actual", "deepin-terminal" },
+                      { "score_delta", 120 },
+                      { "matched", true },
+                      { "effect", "include" },
+                  },
+              } },
+        },
+    });
     AgentCallResult operationResult = AgentCallResult::failure("not_implemented", "SetBinding is not implemented yet.");
     QVariantMap lastSavedBinding;
     QString lastRemovedId;
     QString lastHotkey;
     QString lastExcludeId;
     QString lastLaunchedDesktopId;
+    QString lastWindowFilter;
 
     bool isAvailable() const override { return available; }
     AgentCallResult getStatus() override { return statusResult; }
     AgentCallResult listBindings() override { return bindingsResult; }
     AgentCallResult listApplications() override { return applicationsResult; }
+    AgentCallResult listWindows(const QString& filter) override
+    {
+        lastWindowFilter = filter;
+        return windowsResult;
+    }
     AgentCallResult setBinding(const QVariantMap& binding) override
     {
         lastSavedBinding = binding;
@@ -257,6 +281,25 @@ private slots:
         QCOMPARE(client.lastRemovedId, QString());
         QCOMPARE(client.lastHotkey, QString());
         QCOMPARE(client.lastLaunchedDesktopId, QString());
+    }
+
+    void refreshWindowDiagnosticsPublishesListWindowsResult()
+    {
+        FakeAgentClient client;
+        SettingsController controller(client);
+        QSignalSpy diagnosticsChanged(&controller, &SettingsController::windowDiagnosticsChanged);
+
+        QCOMPARE(controller.refreshWindowDiagnostics("org.deepin.Terminal.desktop"), true);
+
+        QCOMPARE(client.lastWindowFilter, QString("org.deepin.Terminal.desktop"));
+        QCOMPARE(controller.windowDiagnostics().size(), 1);
+        const QVariantMap window = controller.windowDiagnostics().first().toMap();
+        QCOMPARE(window.value("match_score").toInt(), 120);
+        const QVariantMap evidence = window.value("match_evidence").toList().first().toMap();
+        QCOMPARE(evidence.value("rule_type").toString(), QString("wm_class"));
+        QCOMPARE(evidence.value("score_delta").toInt(), 120);
+        QCOMPARE(evidence.value("matched").toBool(), true);
+        QCOMPARE(diagnosticsChanged.count(), 1);
     }
 
     void operationsForwardArgumentsAndSurfaceAgentErrors()

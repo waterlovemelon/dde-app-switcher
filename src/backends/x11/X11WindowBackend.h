@@ -19,6 +19,7 @@ private:
     QStringList windowClass(Window window) const;
     int windowPid(Window window) const;
     bool isSkippable(Window window) const;
+    Window activeWindow() const;
 
     X11Connection& m_connection;
 };

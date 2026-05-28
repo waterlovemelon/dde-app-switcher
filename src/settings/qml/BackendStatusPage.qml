@@ -32,6 +32,28 @@ Item {
         return statusMap()["warnings"] || []
     }
 
+    function windowDiagnostics() {
+        return controller && controller.windowDiagnostics ? controller.windowDiagnostics : []
+    }
+
+    function evidenceSummary(evidence) {
+        const effect = valueOr(evidence["effect"], "include")
+        const verdict = evidence["matched"] ? qsTr("matched") : qsTr("did not match")
+        const delta = Number(evidence["score_delta"] || 0)
+        return valueOr(evidence["rule_type"], qsTr("rule"))
+            + " "
+            + effect
+            + " "
+            + verdict
+            + ": expected "
+            + valueOr(evidence["value"], qsTr("empty"))
+            + ", actual "
+            + valueOr(evidence["actual"], qsTr("empty"))
+            + ", score "
+            + (delta >= 0 ? "+" : "")
+            + delta
+    }
+
     function yesNo(value) {
         return value ? qsTr("Yes") : qsTr("No")
     }
@@ -304,6 +326,101 @@ Item {
                                 StatusPill {
                                     status: root.valueOr(modelData["status"], "unknown")
                                     label: root.valueOr(modelData["status"], qsTr("unknown"))
+                                }
+
+                                Button {
+                                    text: qsTr("Diagnose")
+                                    enabled: root.valueOr(modelData["desktop_id"], "") !== "" && controller.connected
+                                    onClicked: controller.refreshWindowDiagnostics(modelData["desktop_id"])
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Panel {
+                Layout.fillWidth: true
+                implicitHeight: diagnosticsColumn.implicitHeight + 28
+
+                ColumnLayout {
+                    id: diagnosticsColumn
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 14
+                    spacing: 10
+
+                    Text {
+                        text: qsTr("Window Match Diagnostics")
+                        color: "#17313c"
+                        font.pixelSize: 16
+                        font.weight: Font.DemiBold
+                    }
+
+                    LabelText {
+                        Layout.fillWidth: true
+                        visible: root.windowDiagnostics().length === 0
+                        text: qsTr("Choose Diagnose on a binding to show why each current window matched or did not match.")
+                    }
+
+                    Repeater {
+                        model: root.windowDiagnostics()
+
+                        delegate: Rectangle {
+                            required property var modelData
+
+                            Layout.fillWidth: true
+                            implicitHeight: diagnosticContent.implicitHeight + 18
+                            radius: 12
+                            color: "#ffffff"
+                            border.width: 1
+                            border.color: "#e2ebef"
+
+                            ColumnLayout {
+                                id: diagnosticContent
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.margins: 9
+                                spacing: 6
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+
+                                    BodyText {
+                                        Layout.fillWidth: true
+                                        text: root.valueOr(modelData["title"], qsTr("Untitled window"))
+                                        font.weight: Font.DemiBold
+                                        elide: Text.ElideRight
+                                    }
+
+                                    StatusPill {
+                                        status: Number(modelData["match_score"] || 0) >= 80 ? "registered" : "not_registered"
+                                        label: qsTr("score ") + Number(modelData["match_score"] || 0)
+                                    }
+                                }
+
+                                LabelText {
+                                    Layout.fillWidth: true
+                                    text: root.valueOr(modelData["wm_class"], qsTr("No WM_CLASS"))
+                                        + " | "
+                                        + root.valueOr(modelData["app_id"], qsTr("No process id"))
+                                }
+
+                                Repeater {
+                                    model: modelData["match_evidence"] || []
+
+                                    delegate: Text {
+                                        required property var modelData
+
+                                        Layout.fillWidth: true
+                                        text: root.evidenceSummary(modelData)
+                                        color: modelData["matched"] ? "#1f6c43" : "#536773"
+                                        font.family: "monospace"
+                                        font.pixelSize: 12
+                                        wrapMode: Text.WrapAnywhere
+                                    }
                                 }
                             }
                         }

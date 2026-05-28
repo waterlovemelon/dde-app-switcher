@@ -32,6 +32,7 @@ public:
     virtual AgentCallResult getStatus() = 0;
     virtual AgentCallResult listBindings() = 0;
     virtual AgentCallResult listApplications() = 0;
+    virtual AgentCallResult listWindows(const QString& filter) = 0;
     virtual AgentCallResult setBinding(const QVariantMap& binding) = 0;
     virtual AgentCallResult removeBinding(const QString& bindingId) = 0;
     virtual AgentCallResult testHotkey(const QString& hotkey, const QString& excludeId) = 0;
@@ -60,6 +61,7 @@ public:
     AgentCallResult getStatus() override;
     AgentCallResult listBindings() override;
     AgentCallResult listApplications() override;
+    AgentCallResult listWindows(const QString& filter) override;
     AgentCallResult setBinding(const QVariantMap& binding) override;
     AgentCallResult removeBinding(const QString& bindingId) override;
     AgentCallResult testHotkey(const QString& hotkey, const QString& excludeId) override;

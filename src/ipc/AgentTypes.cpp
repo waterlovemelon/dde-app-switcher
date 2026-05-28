@@ -45,6 +45,56 @@ QList<MatchRule> matchRulesFromVariantList(const QVariantList& rules)
     return list;
 }
 
+QVariantMap matchEvidenceToVariantMap(const MatchEvidence& evidence)
+{
+    return {
+        { "source", evidence.source },
+        { "expected", evidence.expected },
+        { "actual", evidence.actual },
+        { "score", evidence.score },
+        { "rule_type", evidence.ruleType },
+        { "value", evidence.value },
+        { "score_delta", evidence.scoreDelta },
+        { "matched", evidence.matched },
+        { "effect", evidence.effect },
+    };
+}
+
+MatchEvidence matchEvidenceFromVariantMap(const QVariantMap& map)
+{
+    MatchEvidence evidence;
+    evidence.source = map.value("source", map.value("rule_type")).toString();
+    evidence.expected = map.value("expected", map.value("value")).toString();
+    evidence.actual = map.value("actual").toString();
+    evidence.score = map.value("score", map.value("score_delta")).toInt();
+    evidence.ruleType = map.value("rule_type", evidence.source).toString();
+    evidence.value = map.value("value", evidence.expected).toString();
+    evidence.scoreDelta = map.value("score_delta", evidence.score).toInt();
+    evidence.matched = map.value("matched").toBool();
+    evidence.effect = map.value("effect", QString("include")).toString();
+    return evidence;
+}
+
+QVariantList matchEvidenceToVariantList(const QList<MatchEvidence>& evidence)
+{
+    QVariantList list;
+    list.reserve(evidence.size());
+    for (const MatchEvidence& item : evidence) {
+        list.append(matchEvidenceToVariantMap(item));
+    }
+    return list;
+}
+
+QList<MatchEvidence> matchEvidenceFromVariantList(const QVariantList& evidence)
+{
+    QList<MatchEvidence> list;
+    list.reserve(evidence.size());
+    for (const QVariant& item : evidence) {
+        list.append(matchEvidenceFromVariantMap(item.toMap()));
+    }
+    return list;
+}
+
 QVariantList stringListToVariantList(const QStringList& values)
 {
     QVariantList list;
@@ -254,6 +304,8 @@ WindowInfoDto WindowInfoDto::fromCore(const WindowInfo& window)
     dto.windowType = window.windowType;
     dto.appId = window.appId;
     dto.skipTaskbar = window.skipTaskbar;
+    dto.matchScore = window.matchScore;
+    dto.matchEvidence = matchEvidenceToVariantList(window.matchEvidence);
     return dto;
 }
 
@@ -272,6 +324,8 @@ WindowInfo WindowInfoDto::toCore() const
     window.windowType = windowType;
     window.appId = appId;
     window.skipTaskbar = skipTaskbar;
+    window.matchScore = matchScore;
+    window.matchEvidence = matchEvidenceFromVariantList(matchEvidence);
     return window;
 }
 
@@ -290,6 +344,8 @@ WindowInfoDto WindowInfoDto::fromVariantMap(const QVariantMap& map)
     dto.windowType = map.value("window_type").toString();
     dto.appId = map.value("app_id").toString();
     dto.skipTaskbar = map.value("skip_taskbar").toBool();
+    dto.matchScore = map.value("match_score").toInt();
+    dto.matchEvidence = map.value("match_evidence").toList();
     return dto;
 }
 
@@ -308,6 +364,8 @@ QVariantMap WindowInfoDto::toVariantMap() const
         { "window_type", windowType },
         { "app_id", appId },
         { "skip_taskbar", skipTaskbar },
+        { "match_score", matchScore },
+        { "match_evidence", matchEvidence },
     };
 }
 

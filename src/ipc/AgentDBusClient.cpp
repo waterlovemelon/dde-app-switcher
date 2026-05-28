@@ -148,6 +148,22 @@ AgentCallResult AgentDBusClient::listApplications()
     return AgentCallResult::success(envelope.value("items").toList());
 }
 
+AgentCallResult AgentDBusClient::listWindows(const QString& filter)
+{
+    AgentCallResult result = callMapMethod("ListWindows", { filter });
+    if (!result.ok) {
+        return result;
+    }
+
+    const QVariantMap envelope = result.value.toMap();
+    if (!envelope.value("ok").toBool()) {
+        return AgentCallResult::failure(
+            envelope.value("error_code").toString(),
+            envelope.value("message").toString());
+    }
+    return AgentCallResult::success(envelope.value("items").toList());
+}
+
 AgentCallResult AgentDBusClient::setBinding(const QVariantMap& binding)
 {
     return operationResult(callMapMethod("SetBinding", { binding }));

@@ -1,6 +1,22 @@
 #include "core/ActionEngine.h"
 
+#include <algorithm>
+
 namespace deepswitch {
+namespace {
+
+QList<WindowInfo> windowsByActivationOrder(QList<WindowInfo> windows)
+{
+    std::stable_sort(windows.begin(), windows.end(), [](const WindowInfo& lhs, const WindowInfo& rhs) {
+        if (lhs.active != rhs.active) {
+            return lhs.active;
+        }
+        return lhs.lastActiveOrder < rhs.lastActiveOrder;
+    });
+    return windows;
+}
+
+}
 
 ActionDecision ActionEngine::decide(const Binding& binding, const AppInfo& app, const QList<WindowInfo>& windows)
 {
@@ -19,7 +35,12 @@ ActionDecision ActionEngine::decide(const Binding& binding, const AppInfo& app, 
     if (windows.size() == 1) {
         return { ActionType::Focus, windows.first().id, {}, {} };
     }
-    return { ActionType::Cycle, windows.first().id, {}, {} };
+
+    const QList<WindowInfo> orderedWindows = windowsByActivationOrder(windows);
+    if (!orderedWindows.isEmpty() && orderedWindows.first().active && orderedWindows.size() > 1) {
+        return { ActionType::Cycle, orderedWindows.at(1).id, {}, {} };
+    }
+    return { ActionType::Cycle, orderedWindows.first().id, {}, {} };
 }
 
 }

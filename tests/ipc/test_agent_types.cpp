@@ -76,6 +76,46 @@ private slots:
         QCOMPARE(roundTripped.matchRules.first().weight, rule.weight);
         QCOMPARE(roundTripped.matchRules.first().effect, rule.effect);
     }
+
+    void windowInfoRoundTripsMatchDiagnostics()
+    {
+        WindowInfo window;
+        window.id = 42;
+        window.title = "Terminal";
+        window.wmClass = "deepin-terminal";
+        window.active = true;
+        window.lastActiveOrder = 0;
+        window.matchScore = 120;
+
+        MatchEvidence evidence;
+        evidence.ruleType = "wm_class";
+        evidence.value = "deepin-terminal";
+        evidence.actual = "deepin-terminal";
+        evidence.scoreDelta = 120;
+        evidence.matched = true;
+        evidence.effect = "include";
+        window.matchEvidence.append(evidence);
+
+        const QVariantMap map = WindowInfoDto::fromCore(window).toVariantMap();
+
+        QCOMPARE(map.value("match_score").toInt(), 120);
+        const QVariantList evidenceList = map.value("match_evidence").toList();
+        QCOMPARE(evidenceList.size(), 1);
+        const QVariantMap evidenceMap = evidenceList.first().toMap();
+        QCOMPARE(evidenceMap.value("rule_type").toString(), QString("wm_class"));
+        QCOMPARE(evidenceMap.value("value").toString(), QString("deepin-terminal"));
+        QCOMPARE(evidenceMap.value("actual").toString(), QString("deepin-terminal"));
+        QCOMPARE(evidenceMap.value("score_delta").toInt(), 120);
+        QCOMPARE(evidenceMap.value("matched").toBool(), true);
+        QCOMPARE(evidenceMap.value("effect").toString(), QString("include"));
+
+        const WindowInfo roundTripped = WindowInfoDto::fromVariantMap(map).toCore();
+        QCOMPARE(roundTripped.matchScore, 120);
+        QCOMPARE(roundTripped.matchEvidence.size(), 1);
+        QCOMPARE(roundTripped.matchEvidence.first().ruleType, QString("wm_class"));
+        QCOMPARE(roundTripped.matchEvidence.first().scoreDelta, 120);
+        QCOMPARE(roundTripped.matchEvidence.first().matched, true);
+    }
 };
 
 QTEST_MAIN(AgentTypesTest)

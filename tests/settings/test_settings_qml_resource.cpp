@@ -67,6 +67,19 @@ private slots:
         QVERIFY(qml.contains("settingsController.setAutostartEnabled"));
         QVERIFY(!qml.contains("checked = settingsController.autostartEnabled"));
     }
+
+    void backendStatusPageContainsWindowDiagnostics()
+    {
+        QFile backendStatusPageQml(QFINDTESTDATA("../../src/settings/qml/BackendStatusPage.qml"));
+        QVERIFY(backendStatusPageQml.open(QIODevice::ReadOnly | QIODevice::Text));
+
+        const QString qml = QString::fromUtf8(backendStatusPageQml.readAll());
+        QVERIFY(qml.contains("Window Match Diagnostics"));
+        QVERIFY(qml.contains("refreshWindowDiagnostics"));
+        QVERIFY(qml.contains("match_evidence"));
+        QVERIFY(qml.contains("score_delta"));
+        QVERIFY(qml.contains("why each current window matched or did not match"));
+    }
 };
 
 QTEST_MAIN(SettingsQmlResourceTest)
