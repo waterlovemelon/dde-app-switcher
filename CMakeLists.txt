@@ -27,6 +27,7 @@ add_library(deepswitch_core STATIC
     src/core/DesktopEntry.cpp
     src/core/Hotkey.cpp
     src/core/Launcher.cpp
+    src/core/LogFileManager.cpp
 )
 
 target_include_directories(deepswitch_core PUBLIC

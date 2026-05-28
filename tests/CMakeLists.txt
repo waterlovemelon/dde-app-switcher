@@ -13,6 +13,8 @@ add_deepswitch_test(test_hotkey core/test_hotkey.cpp)
 
 add_deepswitch_test(test_config core/test_config.cpp)
 
+add_deepswitch_test(test_log_file_manager core/test_log_file_manager.cpp)
+
 add_deepswitch_test(test_autostart_manager core/test_autostart_manager.cpp)
 
 add_deepswitch_test(test_action_engine core/test_action_engine.cpp)

@@ -94,11 +94,11 @@ Result<Config> ConfigManager::load() const
 {
     QFile file(m_path);
     if (!file.exists()) {
-        qCInfo(lcConfig) << "No config file found, using defaults:" << m_path;
+        qCInfo(lcConfig) << "No config file found, using defaults.";
         return Result<Config>::success(Config::defaults());
     }
     if (!file.open(QIODevice::ReadOnly)) {
-        qCCritical(lcConfig) << "Cannot open config file:" << m_path;
+        qCCritical(lcConfig) << "Cannot open config file.";
         return Result<Config>::failure("config_read_failed", "Cannot open config file.");
     }
 
@@ -145,7 +145,7 @@ Result<Config> ConfigManager::load() const
         return Result<Config>::failure(validation.errorCode, validation.message);
     }
 
-    qCInfo(lcConfig) << "Config loaded:" << config.bindings.size() << "bindings from" << m_path;
+    qCInfo(lcConfig) << "Config loaded:" << config.bindings.size() << "bindings.";
     return Result<Config>::success(config);
 }
 

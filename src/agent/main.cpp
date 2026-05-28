@@ -14,9 +14,12 @@
 #include "core/AppInfo.h"
 #include "core/Config.h"
 #include "core/ConfigManager.h"
+#include "core/LogFileManager.h"
 #include "core/WindowInfo.h"
 #include "ipc/AgentDBusContract.h"
 #include "ipc/AgentDBusService.h"
+
+#include <optional>
 
 using namespace deepswitch;
 
@@ -80,6 +83,30 @@ int main(int argc, char *argv[])
 
     QTextStream out(stdout);
     QTextStream err(stderr);
+
+    std::optional<LogFileManager> logFileManager;
+    if (LogFileManager::shouldUseFileLogging(QCoreApplication::arguments())) {
+        logFileManager.emplace();
+        const auto loggingInstalled = logFileManager->install();
+        if (!loggingInstalled.ok) {
+            err << loggingInstalled.errorCode << ": " << loggingInstalled.message << "\n";
+            logFileManager.reset();
+        }
+    }
+
+    auto writeOut = [&](const QString& message) {
+        out << message << "\n";
+        if (logFileManager.has_value()) {
+            logFileManager->writeLine(QtInfoMsg, message);
+        }
+    };
+
+    auto writeErr = [&](const QString& message) {
+        err << message << "\n";
+        if (logFileManager.has_value()) {
+            logFileManager->writeLine(QtCriticalMsg, message);
+        }
+    };
 
     const QString configPath = parser.value("config").isEmpty()
         ? ConfigManager::defaultConfigPath()
@@ -156,18 +183,16 @@ int main(int argc, char *argv[])
     AgentDBusService dbusService(controller);
     QDBusConnection sessionBus = QDBusConnection::sessionBus();
     if (!sessionBus.registerService(AgentDBusContract::ServiceName)) {
-        err << "fatal: failed to register D-Bus service "
-            << AgentDBusContract::ServiceName << ": "
-            << sessionBus.lastError().message() << "\n";
+        writeErr(QStringLiteral("fatal: failed to register D-Bus service %1: %2")
+            .arg(AgentDBusContract::ServiceName, sessionBus.lastError().message()));
         return 2;
     }
 
     if (!sessionBus.registerObject(AgentDBusContract::ObjectPath,
             &dbusService,
             QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals)) {
-        err << "fatal: failed to register D-Bus object "
-            << AgentDBusContract::ObjectPath << ": "
-            << sessionBus.lastError().message() << "\n";
+        writeErr(QStringLiteral("fatal: failed to register D-Bus object %1: %2")
+            .arg(AgentDBusContract::ObjectPath, sessionBus.lastError().message()));
         sessionBus.unregisterService(AgentDBusContract::ServiceName);
         return 2;
     }
@@ -175,18 +200,18 @@ int main(int argc, char *argv[])
     X11Connection connection;
     const auto opened = connection.open();
     if (!opened.ok) {
-        err << opened.errorCode << ": " << opened.message << "\n";
+        writeErr(opened.errorCode + QStringLiteral(": ") + opened.message);
         return 2;
     }
 
     const auto loaded = controller.reloadConfig();
     if (!loaded.ok) {
-        err << loaded.errorCode << ": " << loaded.message << "\n";
+        writeErr(loaded.errorCode + QStringLiteral(": ") + loaded.message);
         return 2;
     }
     const auto autostartSynced = controller.syncAutostart();
     if (!autostartSynced.ok) {
-        err << autostartSynced.errorCode << ": " << autostartSynced.message << "\n";
+        writeErr(autostartSynced.errorCode + QStringLiteral(": ") + autostartSynced.message);
         return 2;
     }
 
@@ -195,18 +220,18 @@ int main(int argc, char *argv[])
     const auto registered = controller.registerHotkeys(hotkeys, &registrationMessages);
     for (const QString& message : registrationMessages) {
         if (message.startsWith("registered ")) {
-            out << message << "\n";
+            writeOut(message);
         } else {
-            err << message << "\n";
+            writeErr(message);
         }
     }
 
     if (!registered.ok) {
-        err << registered.message << "\n";
+        writeErr(registered.message);
         return 2;
     }
 
-    out << "listening for hotkeys; press Ctrl+C to exit\n";
+    writeOut(QStringLiteral("listening for hotkeys; press Ctrl+C to exit"));
     out.flush();
 
     QTimer pollTimer;
@@ -218,13 +243,13 @@ int main(int argc, char *argv[])
                 launchOverlayHint(triggered);
             }
             if (triggered.ok) {
-                out << triggered.value << "\n";
+                writeOut(triggered.value);
                 emit dbusService.HotkeyTriggered(action, {
                     { "ok", true },
                     { "message", triggered.value },
                 });
             } else {
-                err << triggered.errorCode << ": " << triggered.message << "\n";
+                writeErr(triggered.errorCode + QStringLiteral(": ") + triggered.message);
                 emit dbusService.HotkeyTriggered(action, {
                     { "ok", false },
                     { "error_code", triggered.errorCode },
