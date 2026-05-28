@@ -3,6 +3,17 @@
 #include <X11/keysym.h>
 
 namespace deepswitch {
+namespace {
+
+int g_lastGrabError = 0;
+
+int grabErrorHandler(Display*, XErrorEvent* event)
+{
+    g_lastGrabError = event->error_code;
+    return 0;
+}
+
+}
 
 X11HotkeyBackend::X11HotkeyBackend(X11Connection& connection)
     : m_connection(connection)
@@ -44,6 +55,15 @@ KeySym X11HotkeyBackend::keySym(const QString& key) const
     return XStringToKeysym(key.toLocal8Bit().constData());
 }
 
+KeyCode X11HotkeyBackend::keyCode(const Hotkey& hotkey) const
+{
+    const KeySym sym = keySym(hotkey.key);
+    if (sym == NoSymbol) {
+        return 0;
+    }
+    return XKeysymToKeycode(m_connection.display(), sym);
+}
+
 QList<unsigned int> X11HotkeyBackend::lockVariants(unsigned int base) const
 {
     constexpr unsigned int numLock = Mod2Mask;
@@ -63,17 +83,14 @@ QList<unsigned int> X11HotkeyBackend::lockVariants(unsigned int base) const
 
 VoidResult X11HotkeyBackend::registerHotkey(const Hotkey& hotkey, const QString& actionId)
 {
-    const KeySym sym = keySym(hotkey.key);
-    if (sym == NoSymbol) {
-        return VoidResult::failure("hotkey_invalid", "Cannot map hotkey key to X11 keysym.");
-    }
-
-    const KeyCode keycode = XKeysymToKeycode(m_connection.display(), sym);
+    const KeyCode keycode = keyCode(hotkey);
     if (keycode == 0) {
-        return VoidResult::failure("hotkey_invalid", "Cannot map X11 keysym to keycode.");
+        return VoidResult::failure("hotkey_invalid", "Cannot map hotkey key to X11 keycode.");
     }
 
     const unsigned int baseMask = modifierMask(hotkey.modifiers);
+    g_lastGrabError = 0;
+    const auto previousHandler = XSetErrorHandler(grabErrorHandler);
     for (const unsigned int mask : lockVariants(baseMask)) {
         XGrabKey(
             m_connection.display(),
@@ -84,10 +101,34 @@ VoidResult X11HotkeyBackend::registerHotkey(const Hotkey& hotkey, const QString&
             GrabModeAsync,
             GrabModeAsync);
     }
-    XFlush(m_connection.display());
+    XSync(m_connection.display(), False);
+    XSetErrorHandler(previousHandler);
+
+    if (g_lastGrabError != 0) {
+        unregisterHotkey(hotkey);
+        if (g_lastGrabError == BadAccess) {
+            return VoidResult::failure("hotkey_conflict", "Hotkey is already grabbed by another client.");
+        }
+        return VoidResult::failure("hotkey_backend_unavailable", "X11 failed to grab the hotkey.");
+    }
 
     m_keyToAction.insert(QString("%1:%2").arg(static_cast<int>(keycode)).arg(baseMask), actionId);
     return VoidResult::success();
+}
+
+void X11HotkeyBackend::unregisterHotkey(const Hotkey& hotkey)
+{
+    const KeyCode keycode = keyCode(hotkey);
+    if (keycode == 0) {
+        return;
+    }
+
+    const unsigned int baseMask = modifierMask(hotkey.modifiers);
+    for (const unsigned int mask : lockVariants(baseMask)) {
+        XUngrabKey(m_connection.display(), keycode, mask, m_connection.rootWindow());
+    }
+    XFlush(m_connection.display());
+    m_keyToAction.remove(QString("%1:%2").arg(static_cast<int>(keycode)).arg(baseMask));
 }
 
 void X11HotkeyBackend::unregisterAll()

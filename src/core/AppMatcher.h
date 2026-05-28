@@ -7,13 +7,6 @@
 
 namespace deepswitch {
 
-struct MatchEvidence {
-    QString source;
-    QString expected;
-    QString actual;
-    int score = 0;
-};
-
 struct MatchResult {
     bool matched = false;
     int totalScore = 0;

@@ -37,6 +37,37 @@ private slots:
         QVERIFY(parsed.ok);
         QCOMPARE(parsed.value.sequence, QString("Alt+Shift+Q"));
     }
+
+    void normalizesCommonNonTextKeys_data()
+    {
+        QTest::addColumn<QString>("input");
+        QTest::addColumn<QString>("expected");
+
+        QTest::addRow("space") << "Ctrl+space" << "Ctrl+Space";
+        QTest::addRow("tab") << "Alt+tab" << "Alt+Tab";
+        QTest::addRow("backspace") << "Shift+backspace" << "Shift+BackSpace";
+        QTest::addRow("delete") << "Meta+delete" << "Meta+Delete";
+        QTest::addRow("left") << "Ctrl+left" << "Ctrl+Left";
+        QTest::addRow("right") << "Ctrl+right" << "Ctrl+Right";
+        QTest::addRow("up") << "Ctrl+up" << "Ctrl+Up";
+        QTest::addRow("down") << "Ctrl+down" << "Ctrl+Down";
+        QTest::addRow("home") << "Alt+home" << "Alt+Home";
+        QTest::addRow("end") << "Alt+end" << "Alt+End";
+        QTest::addRow("page-up") << "Meta+pageup" << "Meta+Page_Up";
+        QTest::addRow("page-down") << "Meta+pagedown" << "Meta+Page_Down";
+        QTest::addRow("insert") << "Ctrl+insert" << "Ctrl+Insert";
+    }
+
+    void normalizesCommonNonTextKeys()
+    {
+        QFETCH(QString, input);
+        QFETCH(QString, expected);
+
+        const auto parsed = Hotkey::parse(input);
+
+        QVERIFY(parsed.ok);
+        QCOMPARE(parsed.value.sequence, expected);
+    }
 };
 
 QTEST_MAIN(HotkeyTest)

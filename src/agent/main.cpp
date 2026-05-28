@@ -1,23 +1,67 @@
-#include <QCoreApplication>
 #include <QCommandLineParser>
+#include <QCoreApplication>
+#include <QDBusConnection>
+#include <QDBusError>
 #include <QDir>
+#include <QFileInfo>
+#include <QProcess>
 #include <QTextStream>
-#include <QThread>
-#include <optional>
+#include <QTimer>
 
+#include "agent/AgentController.h"
 #include "backends/x11/X11Connection.h"
 #include "backends/x11/X11HotkeyBackend.h"
-#include "backends/x11/X11WindowBackend.h"
-#include "core/ActionEngine.h"
 #include "core/AppInfo.h"
-#include "core/AppMatcher.h"
-#include "core/AppRegistry.h"
+#include "core/Config.h"
 #include "core/ConfigManager.h"
-#include "core/Hotkey.h"
-#include "core/Launcher.h"
+#include "core/LogFileManager.h"
 #include "core/WindowInfo.h"
+#include "ipc/AgentDBusContract.h"
+#include "ipc/AgentDBusService.h"
+
+#include <optional>
 
 using namespace deepswitch;
+
+namespace {
+
+QString overlayKindForResult(const Result<QString>& triggered)
+{
+    if (!triggered.ok) {
+        return QStringLiteral("failed");
+    }
+
+    const QString message = triggered.value.toLower();
+    if (message.startsWith(QStringLiteral("launched"))) {
+        return QStringLiteral("launched");
+    }
+    if (message.startsWith(QStringLiteral("cycled"))) {
+        return QStringLiteral("cycled");
+    }
+    if (message.startsWith(QStringLiteral("focused"))) {
+        return QStringLiteral("focused");
+    }
+    return QStringLiteral("focused");
+}
+
+bool launchOverlayHint(const Result<QString>& triggered)
+{
+    const QString executable = QCoreApplication::applicationDirPath() + QDir::separator() + QStringLiteral("deepswitch-overlay");
+    const QFileInfo overlayInfo(executable);
+    if (!overlayInfo.exists() || !overlayInfo.isExecutable()) {
+        return false;
+    }
+
+    const QString message = triggered.ok ? triggered.value : triggered.message;
+    return QProcess::startDetached(executable, {
+        QStringLiteral("--kind"),
+        overlayKindForResult(triggered),
+        QStringLiteral("--message"),
+        message,
+    });
+}
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -40,13 +84,38 @@ int main(int argc, char *argv[])
     QTextStream out(stdout);
     QTextStream err(stderr);
 
+    std::optional<LogFileManager> logFileManager;
+    if (LogFileManager::shouldUseFileLogging(QCoreApplication::arguments())) {
+        logFileManager.emplace();
+        const auto loggingInstalled = logFileManager->install();
+        if (!loggingInstalled.ok) {
+            err << loggingInstalled.errorCode << ": " << loggingInstalled.message << "\n";
+            logFileManager.reset();
+        }
+    }
+
+    auto writeOut = [&](const QString& message) {
+        out << message << "\n";
+        if (logFileManager.has_value()) {
+            logFileManager->writeLine(QtInfoMsg, message);
+        }
+    };
+
+    auto writeErr = [&](const QString& message) {
+        err << message << "\n";
+        if (logFileManager.has_value()) {
+            logFileManager->writeLine(QtCriticalMsg, message);
+        }
+    };
+
     const QString configPath = parser.value("config").isEmpty()
-        ? QDir::homePath() + "/.config/deepswitch/config.json"
+        ? ConfigManager::defaultConfigPath()
         : parser.value("config");
 
+    AgentController controller(configPath);
+
     if (parser.isSet("validate-config")) {
-        ConfigManager manager(configPath);
-        const auto loaded = manager.load();
+        const auto loaded = controller.reloadConfig();
         if (!loaded.ok) {
             err << loaded.errorCode << ": " << loaded.message << "\n";
             return 2;
@@ -56,41 +125,31 @@ int main(int argc, char *argv[])
     }
 
     if (parser.isSet("list-bindings")) {
-        ConfigManager manager(configPath);
-        const auto loaded = manager.load();
+        const auto loaded = controller.reloadConfig();
         if (!loaded.ok) {
             err << loaded.errorCode << ": " << loaded.message << "\n";
             return 2;
         }
-        for (const Binding& binding : loaded.value.bindings) {
+        for (const Binding& binding : controller.listBindings()) {
             out << binding.id << "\t" << binding.hotkey << "\t" << binding.desktopId << "\n";
         }
         return 0;
     }
 
     if (parser.isSet("list-apps")) {
-        AppRegistry registry;
-        const auto scanned = registry.scan();
+        const auto scanned = controller.listApplications();
         if (!scanned.ok) {
             err << scanned.errorCode << ": " << scanned.message << "\n";
             return 2;
         }
-        for (const AppInfo& appInfo : registry.listApplications()) {
+        for (const AppInfo& appInfo : scanned.value) {
             out << appInfo.desktopId << "\t" << appInfo.localizedName << "\t" << appInfo.exec << "\n";
         }
         return 0;
     }
 
     if (parser.isSet("list-windows")) {
-        X11Connection connection;
-        const auto opened = connection.open();
-        if (!opened.ok) {
-            err << opened.errorCode << ": " << opened.message << "\n";
-            return 2;
-        }
-
-        X11WindowBackend windows(connection);
-        const auto listed = windows.listWindows();
+        const auto listed = controller.listWindows();
         if (!listed.ok) {
             err << listed.errorCode << ": " << listed.message << "\n";
             return 2;
@@ -106,181 +165,102 @@ int main(int argc, char *argv[])
     }
 
     if (parser.isSet("trigger")) {
-        ConfigManager manager(configPath);
-        const auto loaded = manager.load();
+        const auto loaded = controller.reloadConfig();
         if (!loaded.ok) {
             err << loaded.errorCode << ": " << loaded.message << "\n";
             return 2;
         }
 
-        const QString actionId = parser.value("trigger");
-        std::optional<Binding> binding;
-        for (const Binding& candidate : loaded.value.bindings) {
-            if (candidate.id == actionId) {
-                binding = candidate;
-                break;
-            }
-        }
-        if (!binding.has_value()) {
-            err << "app_not_found: binding not found\n";
+        const auto triggered = controller.triggerAction(parser.value("trigger"));
+        if (!triggered.ok) {
+            err << triggered.errorCode << ": " << triggered.message << "\n";
             return 2;
         }
+        out << triggered.value << "\n";
+        return 0;
+    }
 
-        AppRegistry registry;
-        registry.scan();
-        const auto appInfo = registry.findByDesktopId(binding->desktopId);
-        if (!appInfo.has_value()) {
-            err << "app_not_found: desktop id not found\n";
-            return 2;
-        }
-
-        X11Connection connection;
-        const auto opened = connection.open();
-        if (!opened.ok) {
-            err << opened.errorCode << ": " << opened.message << "\n";
-            return 2;
-        }
-
-        X11WindowBackend windows(connection);
-        const auto listed = windows.listWindows();
-        if (!listed.ok) {
-            err << listed.errorCode << ": " << listed.message << "\n";
-            return 2;
-        }
-
-        QList<WindowInfo> matches;
-        for (const WindowInfo& window : listed.value) {
-            const MatchResult match = AppMatcher::match(appInfo.value(), window, binding->matchRules);
-            if (match.matched) {
-                matches.append(window);
-            }
-        }
-
-        const ActionDecision decision = ActionEngine::decide(binding.value(), appInfo.value(), matches);
-        if (decision.type == ActionType::Launch) {
-            const auto launched = Launcher::launch(appInfo.value());
-            if (!launched.ok) {
-                err << launched.errorCode << ": " << launched.message << "\n";
-                return 2;
-            }
-            out << "launched " << appInfo->desktopId << "\n";
-            return 0;
-        }
-        if (decision.type == ActionType::Focus || decision.type == ActionType::Cycle) {
-            const auto activated = windows.activateWindow(decision.windowId);
-            if (!activated.ok) {
-                err << activated.errorCode << ": " << activated.message << "\n";
-                return 2;
-            }
-            out << "activated " << decision.windowId << "\n";
-            return 0;
-        }
-
-        err << decision.errorCode << ": " << decision.message << "\n";
+    AgentDBusService dbusService(controller);
+    QDBusConnection sessionBus = QDBusConnection::sessionBus();
+    if (!sessionBus.registerService(AgentDBusContract::ServiceName)) {
+        writeErr(QStringLiteral("fatal: failed to register D-Bus service %1: %2")
+            .arg(AgentDBusContract::ServiceName, sessionBus.lastError().message()));
         return 2;
     }
 
-    // Default: run hotkey loop
+    if (!sessionBus.registerObject(AgentDBusContract::ObjectPath,
+            &dbusService,
+            QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals)) {
+        writeErr(QStringLiteral("fatal: failed to register D-Bus object %1: %2")
+            .arg(AgentDBusContract::ObjectPath, sessionBus.lastError().message()));
+        sessionBus.unregisterService(AgentDBusContract::ServiceName);
+        return 2;
+    }
+
     X11Connection connection;
     const auto opened = connection.open();
     if (!opened.ok) {
-        err << opened.errorCode << ": " << opened.message << "\n";
+        writeErr(opened.errorCode + QStringLiteral(": ") + opened.message);
         return 2;
     }
 
-    ConfigManager manager(configPath);
-    const auto loaded = manager.load();
+    const auto loaded = controller.reloadConfig();
     if (!loaded.ok) {
-        err << loaded.errorCode << ": " << loaded.message << "\n";
+        writeErr(loaded.errorCode + QStringLiteral(": ") + loaded.message);
         return 2;
     }
-
-    AppRegistry registry;
-    registry.scan();
+    const auto autostartSynced = controller.syncAutostart();
+    if (!autostartSynced.ok) {
+        writeErr(autostartSynced.errorCode + QStringLiteral(": ") + autostartSynced.message);
+        return 2;
+    }
 
     X11HotkeyBackend hotkeys(connection);
-    X11WindowBackend windowBackend(connection);
-
-    int registered = 0;
-    for (const Binding& binding : loaded.value.bindings) {
-        if (!binding.enabled || binding.hotkey.isEmpty()) {
-            continue;
+    QStringList registrationMessages;
+    const auto registered = controller.registerHotkeys(hotkeys, &registrationMessages);
+    for (const QString& message : registrationMessages) {
+        if (message.startsWith("registered ")) {
+            writeOut(message);
+        } else {
+            writeErr(message);
         }
-        const auto parsed = Hotkey::parse(binding.hotkey);
-        if (!parsed.ok) {
-            err << "hotkey_invalid: " << binding.id << " - " << parsed.message << "\n";
-            continue;
-        }
-        const auto result = hotkeys.registerHotkey(parsed.value, binding.id);
-        if (!result.ok) {
-            err << result.errorCode << ": " << binding.id << " - " << result.message << "\n";
-            continue;
-        }
-        out << "registered " << binding.hotkey << " -> " << binding.id << "\n";
-        ++registered;
     }
 
-    if (registered == 0) {
-        err << "no hotkeys registered\n";
+    if (!registered.ok) {
+        writeErr(registered.message);
         return 2;
     }
 
-    out << "listening for hotkeys; press Ctrl+C to exit\n";
+    writeOut(QStringLiteral("listening for hotkeys; press Ctrl+C to exit"));
     out.flush();
 
-    while (true) {
+    QTimer pollTimer;
+    QObject::connect(&pollTimer, &QTimer::timeout, [&]() {
         const QString action = hotkeys.pollTriggeredAction();
         if (!action.isEmpty()) {
-            std::optional<Binding> binding;
-            for (const Binding& candidate : loaded.value.bindings) {
-                if (candidate.id == action) {
-                    binding = candidate;
-                    break;
-                }
+            const auto triggered = controller.triggerHotkeyAction(action);
+            if (controller.showOverlay()) {
+                launchOverlayHint(triggered);
             }
-            if (!binding.has_value()) {
-                continue;
-            }
-
-            const auto appInfo = registry.findByDesktopId(binding->desktopId);
-            if (!appInfo.has_value()) {
-                err << "app_not_found: " << binding->desktopId << "\n";
-                continue;
-            }
-
-            const auto listed = windowBackend.listWindows();
-            QList<WindowInfo> matches;
-            if (listed.ok) {
-                for (const WindowInfo& window : listed.value) {
-                    const MatchResult match = AppMatcher::match(appInfo.value(), window, binding->matchRules);
-                    if (match.matched) {
-                        matches.append(window);
-                    }
-                }
-            }
-
-            const ActionDecision decision = ActionEngine::decide(binding.value(), appInfo.value(), matches);
-            if (decision.type == ActionType::Launch) {
-                const auto launched = Launcher::launch(appInfo.value());
-                if (launched.ok) {
-                    out << "launched " << appInfo->desktopId << "\n";
-                } else {
-                    err << launched.errorCode << ": " << launched.message << "\n";
-                }
-            } else if (decision.type == ActionType::Focus || decision.type == ActionType::Cycle) {
-                const auto activated = windowBackend.activateWindow(decision.windowId);
-                if (activated.ok) {
-                    out << "activated " << decision.windowId << "\n";
-                } else {
-                    err << activated.errorCode << ": " << activated.message << "\n";
-                }
+            if (triggered.ok) {
+                writeOut(triggered.value);
+                emit dbusService.HotkeyTriggered(action, {
+                    { "ok", true },
+                    { "message", triggered.value },
+                });
             } else {
-                err << decision.errorCode << ": " << decision.message << "\n";
+                writeErr(triggered.errorCode + QStringLiteral(": ") + triggered.message);
+                emit dbusService.HotkeyTriggered(action, {
+                    { "ok", false },
+                    { "error_code", triggered.errorCode },
+                    { "message", triggered.message },
+                });
+                emit dbusService.ErrorOccurred(triggered.errorCode, triggered.message);
             }
             out.flush();
         }
-        QThread::msleep(20);
-    }
+    });
+    pollTimer.start(20);
 
-    return 0;
+    return app.exec();
 }

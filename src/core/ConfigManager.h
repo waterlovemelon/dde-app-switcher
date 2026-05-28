@@ -10,6 +10,8 @@ class ConfigManager {
 public:
     explicit ConfigManager(QString path);
 
+    static QString defaultConfigPath();
+
     Result<Config> load() const;
     VoidResult save(const Config& config) const;
     static VoidResult validate(const Config& config);

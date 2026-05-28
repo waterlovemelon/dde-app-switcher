@@ -12,12 +12,14 @@ public:
     explicit X11HotkeyBackend(X11Connection& connection);
 
     VoidResult registerHotkey(const Hotkey& hotkey, const QString& actionId);
+    void unregisterHotkey(const Hotkey& hotkey);
     void unregisterAll();
     QString pollTriggeredAction();
 
 private:
     unsigned int modifierMask(const QStringList& modifiers) const;
     KeySym keySym(const QString& key) const;
+    KeyCode keyCode(const Hotkey& hotkey) const;
     QList<unsigned int> lockVariants(unsigned int base) const;
 
     X11Connection& m_connection;

@@ -28,6 +28,45 @@ static QString normalizeToken(const QString& token)
     if (t == "esc" || t == "escape") {
         return "Esc";
     }
+    if (t == "space") {
+        return "Space";
+    }
+    if (t == "tab") {
+        return "Tab";
+    }
+    if (t == "backspace" || t == "back_space") {
+        return "BackSpace";
+    }
+    if (t == "delete" || t == "del") {
+        return "Delete";
+    }
+    if (t == "left") {
+        return "Left";
+    }
+    if (t == "right") {
+        return "Right";
+    }
+    if (t == "up") {
+        return "Up";
+    }
+    if (t == "down") {
+        return "Down";
+    }
+    if (t == "home") {
+        return "Home";
+    }
+    if (t == "end") {
+        return "End";
+    }
+    if (t == "pageup" || t == "page_up" || t == "prior") {
+        return "Page_Up";
+    }
+    if (t == "pagedown" || t == "page_down" || t == "next") {
+        return "Page_Down";
+    }
+    if (t == "insert" || t == "ins") {
+        return "Insert";
+    }
     if (t.size() == 1) {
         return t.toUpper();
     }
