@@ -7,8 +7,11 @@
 #include "core/WindowInfo.h"
 
 #include <QList>
+#include <QSet>
 #include <QString>
 #include <QStringList>
+#include <QVariantList>
+#include <QVariantMap>
 #include <functional>
 #include <optional>
 
@@ -29,6 +32,12 @@ struct AgentControllerStatus {
     bool enabled = false;
     QString activeBackend;
     QString message;
+    QString sessionType = "unknown";
+    QVariantMap hotkeyBackend;
+    QVariantMap windowBackend;
+    QVariantMap capabilities;
+    QVariantList bindingStatuses;
+    QStringList warnings;
 };
 
 class AgentController {
@@ -80,6 +89,7 @@ private:
     AgentControllerStatus m_status;
     LauncherFn m_launcher;
     HotkeyTestFn m_hotkeyTester;
+    QSet<QString> m_registeredHotkeyActionIds;
 };
 
 }

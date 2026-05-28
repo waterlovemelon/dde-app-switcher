@@ -211,47 +211,10 @@ ApplicationWindow {
                 }
 
                 SectionCard {
-                    ColumnLayout {
+                    BackendStatusPage {
                         anchors.fill: parent
-                        anchors.margins: 22
-                        spacing: 14
-
-                        Text {
-                            text: qsTr("Runtime")
-                            color: "#17313c"
-                            font.pixelSize: 18
-                            font.weight: Font.DemiBold
-                        }
-
-                        GridLayout {
-                            Layout.fillWidth: true
-                            columns: 2
-                            rowSpacing: 10
-                            columnSpacing: 18
-
-                            MutedText { text: qsTr("Agent") }
-                            Text {
-                                text: settingsController.connected ? qsTr("Connected") : qsTr("Disconnected")
-                                color: "#17313c"
-                                font.pixelSize: 14
-                            }
-
-                            MutedText { text: qsTr("Active backend") }
-                            Text {
-                                text: settingsController.status["active_backend"] || qsTr("Unavailable")
-                                color: "#17313c"
-                                font.pixelSize: 14
-                            }
-
-                            MutedText { text: qsTr("Backend message") }
-                            Text {
-                                Layout.fillWidth: true
-                                text: settingsController.backendStatus["message"] || settingsController.lastError || qsTr("No status message")
-                                color: "#17313c"
-                                font.pixelSize: 14
-                                wrapMode: Text.WordWrap
-                            }
-                        }
+                        anchors.margins: 18
+                        controller: settingsController
                     }
                 }
 

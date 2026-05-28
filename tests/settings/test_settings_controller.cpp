@@ -13,6 +13,35 @@ public:
         { "running", true },
         { "enabled", true },
         { "active_backend", "x11" },
+        { "session_type", "x11" },
+        { "hotkey_backend", QVariantMap {
+              { "name", "x11" },
+              { "available", true },
+              { "running", true },
+              { "message", "ready" },
+          } },
+        { "window_backend", QVariantMap {
+              { "name", "x11" },
+              { "available", true },
+              { "running", true },
+              { "message", "ready" },
+          } },
+        { "capabilities", QVariantMap {
+              { "global_hotkey", true },
+              { "window_list", true },
+              { "activate_window", true },
+              { "launch_app", true },
+          } },
+        { "binding_statuses", QVariantList {
+              QVariantMap {
+                  { "id", "terminal" },
+                  { "hotkey", "Alt+Return" },
+                  { "desktop_id", "org.deepin.Terminal.desktop" },
+                  { "status", "registered" },
+                  { "message", "registered" },
+              },
+          } },
+        { "warnings", QStringList {} },
         { "backends", QVariantList { QVariantMap {
                           { "name", "x11" },
                           { "available", true },
@@ -85,6 +114,9 @@ private slots:
         QCOMPARE(controller.connected(), true);
         QCOMPARE(controller.status().value("active_backend").toString(), QString("x11"));
         QCOMPARE(controller.backendStatus().value("name").toString(), QString("x11"));
+        QCOMPARE(controller.status().value("session_type").toString(), QString("x11"));
+        QCOMPARE(controller.status().value("capabilities").toMap().value("global_hotkey").toBool(), true);
+        QCOMPARE(controller.status().value("binding_statuses").toList().first().toMap().value("status").toString(), QString("registered"));
         QCOMPARE(controller.bindings().size(), 1);
         QCOMPARE(controller.bindings().first().toMap().value("id").toString(), QString("terminal"));
         QCOMPARE(controller.applications().size(), 1);

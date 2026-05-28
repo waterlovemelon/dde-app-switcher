@@ -86,6 +86,12 @@ QVariantMap AgentDBusService::GetStatus() const
     QVariantMap map = dto.toVariantMap();
     map.insert("state", stateToString(status.state));
     map.insert("message", status.message);
+    map.insert("session_type", status.sessionType);
+    map.insert("hotkey_backend", status.hotkeyBackend);
+    map.insert("window_backend", status.windowBackend);
+    map.insert("capabilities", status.capabilities);
+    map.insert("binding_statuses", status.bindingStatuses);
+    map.insert("warnings", status.warnings);
     return map;
 }
 

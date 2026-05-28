@@ -264,6 +264,118 @@ private slots:
         QVERIFY2(tested.ok, qPrintable(tested.message));
         QVERIFY(!backendTesterCalled);
     }
+
+    void statusReportsBackendCapabilitiesAndBindingDiagnostics()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString configPath = dir.path() + "/config.json";
+
+        Config config = Config::defaults();
+
+        Binding registered;
+        registered.id = "terminal";
+        registered.hotkey = "Alt+Return";
+        registered.desktopId = "terminal.desktop";
+        config.bindings.append(registered);
+
+        Binding disabled;
+        disabled.id = "disabled";
+        disabled.enabled = false;
+        disabled.hotkey = "Meta+D";
+        disabled.desktopId = "terminal.desktop";
+        config.bindings.append(disabled);
+
+        Binding invalid;
+        invalid.id = "invalid";
+        invalid.hotkey = "Alt";
+        invalid.desktopId = "terminal.desktop";
+        config.bindings.append(invalid);
+
+        Binding conflict;
+        conflict.id = "conflict";
+        conflict.hotkey = "Alt+Enter";
+        conflict.desktopId = "terminal.desktop";
+        config.bindings.append(conflict);
+
+        Binding missingApp;
+        missingApp.id = "missing-app";
+        missingApp.hotkey = "Meta+M";
+        missingApp.desktopId = "missing.desktop";
+        config.bindings.append(missingApp);
+
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        QFile desktopFile(dir.path() + "/terminal.desktop");
+        QVERIFY(desktopFile.open(QIODevice::WriteOnly | QIODevice::Text));
+        desktopFile.write("[Desktop Entry]\n"
+                          "Type=Application\n"
+                          "Name=Terminal\n"
+                          "Exec=terminal\n");
+        desktopFile.close();
+
+        AgentController controller(configPath, AgentController::BackendMode::Disabled);
+        controller.setApplicationDirs({ dir.path() });
+        QVERIFY(controller.reloadConfig().ok);
+
+        const AgentControllerStatus status = controller.status();
+        QCOMPARE(status.hotkeyBackend.value("name").toString(), QString("disabled"));
+        QCOMPARE(status.windowBackend.value("name").toString(), QString("disabled"));
+        QCOMPARE(status.capabilities.value("global_hotkey").toBool(), false);
+        QCOMPARE(status.capabilities.value("window_list").toBool(), false);
+        QCOMPARE(status.capabilities.value("activate_window").toBool(), false);
+        QCOMPARE(status.capabilities.value("launch_app").toBool(), true);
+
+        QMap<QString, QString> bindingStatuses;
+        for (const QVariant& item : status.bindingStatuses) {
+            const QVariantMap bindingStatus = item.toMap();
+            bindingStatuses.insert(
+                bindingStatus.value("id").toString(),
+                bindingStatus.value("status").toString());
+        }
+
+        QCOMPARE(bindingStatuses.value("terminal"), QString("not_registered"));
+        QCOMPARE(bindingStatuses.value("disabled"), QString("disabled"));
+        QCOMPARE(bindingStatuses.value("invalid"), QString("invalid"));
+        QCOMPARE(bindingStatuses.value("conflict"), QString("conflict"));
+        QCOMPARE(bindingStatuses.value("missing-app"), QString("app_not_found"));
+        QVERIFY(status.warnings.contains("hotkey_invalid: invalid - Hotkey must contain a main key."));
+        QVERIFY(status.warnings.contains("hotkey_conflict: conflict conflicts with terminal"));
+        QVERIFY(status.warnings.contains("app_not_found: missing-app - missing.desktop"));
+    }
+
+    void statusDoesNotReportRegisteredBeforeHotkeyRegistration()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString configPath = dir.path() + "/config.json";
+
+        Config config = Config::defaults();
+        Binding binding;
+        binding.id = "terminal";
+        binding.hotkey = "Alt+Return";
+        binding.desktopId = "terminal.desktop";
+        config.bindings.append(binding);
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        QFile desktopFile(dir.path() + "/terminal.desktop");
+        QVERIFY(desktopFile.open(QIODevice::WriteOnly | QIODevice::Text));
+        desktopFile.write("[Desktop Entry]\n"
+                          "Type=Application\n"
+                          "Name=Terminal\n"
+                          "Exec=terminal\n");
+        desktopFile.close();
+
+        AgentController controller(configPath, AgentController::BackendMode::X11);
+        controller.setApplicationDirs({ dir.path() });
+        QVERIFY(controller.reloadConfig().ok);
+
+        const AgentControllerStatus status = controller.status();
+        QCOMPARE(status.hotkeyBackend.value("running").toBool(), false);
+        QCOMPARE(status.windowBackend.value("running").toBool(), true);
+        QCOMPARE(status.bindingStatuses.size(), 1);
+        QCOMPARE(status.bindingStatuses.first().toMap().value("status").toString(), QString("not_registered"));
+    }
 };
 
 QTEST_MAIN(AgentControllerTest)

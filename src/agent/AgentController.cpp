@@ -12,8 +12,129 @@
 
 #include <memory>
 #include <optional>
+#include <QSet>
+#include <QVariant>
 
 namespace deepswitch {
+namespace {
+
+bool isActiveState(AgentControllerState state)
+{
+    return state == AgentControllerState::Running || state == AgentControllerState::Degraded;
+}
+
+QString sessionType()
+{
+    const QString value = qEnvironmentVariable("XDG_SESSION_TYPE").trimmed();
+    return value.isEmpty() ? QString("unknown") : value;
+}
+
+QVariantMap backendStatus(const QString& name, bool available, bool running, const QString& message)
+{
+    return {
+        { "name", name },
+        { "available", available },
+        { "running", running },
+        { "message", message },
+    };
+}
+
+QVariantMap capabilitiesForMode(AgentController::BackendMode backendMode)
+{
+    const bool x11 = backendMode == AgentController::BackendMode::X11;
+    return {
+        { "global_hotkey", x11 },
+        { "window_list", x11 },
+        { "activate_window", x11 },
+        { "launch_app", true },
+    };
+}
+
+QSet<QString> scanApplicationIds(const QStringList& applicationDirs, QStringList* warnings)
+{
+    AppRegistry registry;
+    if (!applicationDirs.isEmpty()) {
+        registry.setApplicationDirs(applicationDirs);
+    }
+
+    const auto scanned = registry.scan();
+    if (!scanned.ok) {
+        if (warnings != nullptr) {
+            warnings->append(scanned.errorCode + ": " + scanned.message);
+        }
+        return {};
+    }
+
+    QSet<QString> ids;
+    const QList<AppInfo> applications = registry.listApplications();
+    ids.reserve(applications.size());
+    for (const AppInfo& appInfo : applications) {
+        ids.insert(appInfo.desktopId);
+    }
+    return ids;
+}
+
+QVariantList deriveBindingStatuses(
+    const QList<Binding>& bindings,
+    const QSet<QString>& applicationIds,
+    const QSet<QString>& registeredHotkeyActionIds,
+    QStringList* warnings)
+{
+    QVariantList statuses;
+    statuses.reserve(bindings.size());
+    QHash<QString, QString> hotkeyOwners;
+
+    for (const Binding& binding : bindings) {
+        QString status = "registered";
+        QString message = "registered";
+
+        if (!binding.enabled) {
+            status = "disabled";
+            message = "binding disabled";
+        } else {
+            const auto parsed = Hotkey::parse(binding.hotkey);
+            if (!parsed.ok) {
+                status = "invalid";
+                message = parsed.message;
+                if (warnings != nullptr) {
+                    warnings->append("hotkey_invalid: " + binding.id + " - " + parsed.message);
+                }
+            } else if (hotkeyOwners.contains(parsed.value.sequence)) {
+                const QString owner = hotkeyOwners.value(parsed.value.sequence);
+                status = "conflict";
+                message = "conflicts with binding '" + owner + "'";
+                if (warnings != nullptr) {
+                    warnings->append("hotkey_conflict: " + binding.id + " conflicts with " + owner);
+                }
+            } else {
+                hotkeyOwners.insert(parsed.value.sequence, binding.id);
+                if (!binding.desktopId.trimmed().isEmpty() && !applicationIds.contains(binding.desktopId)) {
+                    status = "app_not_found";
+                    message = "desktop id not found";
+                    if (warnings != nullptr) {
+                        warnings->append("app_not_found: " + binding.id + " - " + binding.desktopId);
+                    }
+                } else if (!registeredHotkeyActionIds.contains(binding.id)) {
+                    status = "not_registered";
+                    message = "hotkey is not registered";
+                }
+            }
+        }
+
+        statuses.append(QVariantMap {
+            { "id", binding.id },
+            { "enabled", binding.enabled },
+            { "hotkey", binding.hotkey },
+            { "desktop_id", binding.desktopId },
+            { "status", status },
+            { "message", message },
+        });
+    }
+
+    return statuses;
+}
+
+}
 
 AgentController::AgentController(QString configPath, BackendMode backendMode, LauncherFn launcher, HotkeyTestFn hotkeyTester)
     : m_configPath(std::move(configPath))
@@ -41,6 +162,7 @@ VoidResult AgentController::reloadConfig()
     }
 
     m_config = loaded.value;
+    m_registeredHotkeyActionIds.clear();
     m_status.enabled = m_config.general.enabled;
     updateState(m_config.general.enabled ? AgentControllerState::Running : AgentControllerState::Paused);
     return VoidResult::success();
@@ -259,7 +381,28 @@ VoidResult AgentController::testHotkey(const QString& hotkey, const QString& exc
 
 AgentControllerStatus AgentController::status() const
 {
-    return m_status;
+    AgentControllerStatus status = m_status;
+    status.sessionType = sessionType();
+
+    const bool x11 = m_backendMode == BackendMode::X11;
+    const bool active = isActiveState(status.state);
+    const QString backendName = x11 ? QString("x11") : QString("disabled");
+    const bool backendAvailable = x11;
+    const bool hotkeyBackendRunning = x11 && active && !m_registeredHotkeyActionIds.isEmpty();
+    const bool windowBackendRunning = x11 && active;
+    const QString backendMessage = status.message.isEmpty()
+        ? (x11 ? QString("X11 backend selected.") : QString("Backend disabled."))
+        : status.message;
+
+    status.hotkeyBackend = backendStatus(backendName, backendAvailable, hotkeyBackendRunning, backendMessage);
+    status.windowBackend = backendStatus(backendName, backendAvailable, windowBackendRunning, backendMessage);
+    status.capabilities = capabilitiesForMode(m_backendMode);
+
+    QStringList warnings;
+    const QSet<QString> applicationIds = scanApplicationIds(m_applicationDirs, &warnings);
+    status.bindingStatuses = deriveBindingStatuses(m_config.bindings, applicationIds, m_registeredHotkeyActionIds, &warnings);
+    status.warnings = warnings;
+    return status;
 }
 
 void AgentController::setApplicationDirs(QStringList dirs)
@@ -271,6 +414,7 @@ void AgentController::setApplicationDirs(QStringList dirs)
 Result<int> AgentController::registerHotkeys(X11HotkeyBackend& hotkeys, QStringList* messages)
 {
     int registered = 0;
+    m_registeredHotkeyActionIds.clear();
     for (const Binding& binding : m_config.bindings) {
         if (!binding.enabled || binding.hotkey.isEmpty()) {
             continue;
@@ -292,6 +436,7 @@ Result<int> AgentController::registerHotkeys(X11HotkeyBackend& hotkeys, QStringL
         if (messages != nullptr) {
             messages->append("registered " + binding.hotkey + " -> " + binding.id);
         }
+        m_registeredHotkeyActionIds.insert(binding.id);
         ++registered;
     }
 

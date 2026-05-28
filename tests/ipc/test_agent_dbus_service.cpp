@@ -71,6 +71,16 @@ private slots:
         QCOMPARE(status.value("running").toBool(), true);
         QCOMPARE(status.value("enabled").toBool(), true);
         QCOMPARE(status.value("active_backend").toString(), QString("disabled"));
+        QVERIFY(status.contains("session_type"));
+        QCOMPARE(status.value("hotkey_backend").toMap().value("name").toString(), QString("disabled"));
+        QCOMPARE(status.value("window_backend").toMap().value("name").toString(), QString("disabled"));
+        QCOMPARE(status.value("capabilities").toMap().value("launch_app").toBool(), true);
+        QCOMPARE(status.value("capabilities").toMap().value("global_hotkey").toBool(), false);
+        const QVariantList bindingStatuses = status.value("binding_statuses").toList();
+        QCOMPARE(bindingStatuses.size(), 1);
+        QCOMPARE(bindingStatuses.first().toMap().value("id").toString(), QString("terminal"));
+        QCOMPARE(bindingStatuses.first().toMap().value("status").toString(), QString("not_registered"));
+        QCOMPARE(status.value("warnings").toStringList().size(), 0);
 
         const QVariantList bindings = service.ListBindings();
         QCOMPARE(bindings.size(), 1);

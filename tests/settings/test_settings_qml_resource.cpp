@@ -28,6 +28,13 @@ private slots:
         QVERIFY(applicationPickerQml.size() > 0);
     }
 
+    void backendStatusPageQmlIsEmbedded()
+    {
+        const QResource backendStatusPageQml(":/qml/BackendStatusPage.qml");
+        QVERIFY(backendStatusPageQml.isValid());
+        QVERIFY(backendStatusPageQml.size() > 0);
+    }
+
     void hotkeyRecorderQmlIsEmbedded()
     {
         const QResource hotkeyRecorderQml(":/qml/HotkeyRecorder.qml");
