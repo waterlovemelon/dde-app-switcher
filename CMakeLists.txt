@@ -116,6 +116,16 @@ install(TARGETS deepswitch-agent
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+install(FILES
+    deepin-manico-like-design.md
+    docs/m0-x11-findings.md
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+)
+
+install(DIRECTORY docs/superpowers/plans
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}/superpowers
+)
+
 if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
     add_executable(deepswitch-overlay
         src/overlay/main.cpp

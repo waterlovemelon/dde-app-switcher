@@ -47,3 +47,5 @@ add_deepswitch_test(test_overlay_qml_resource
 )
 
 add_deepswitch_test(test_linux_desktop_entry packaging/test_linux_desktop_entry.cpp)
+
+add_deepswitch_test(test_debian_packaging packaging/test_debian_packaging.cpp)

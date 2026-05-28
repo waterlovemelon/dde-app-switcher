@@ -1,0 +1,34 @@
+Source: deepswitch
+Section: x11
+Priority: optional
+Maintainer: DeepSwitch Developers <deepswitch@example.invalid>
+Build-Depends:
+ debhelper-compat (= 13),
+ cmake,
+ g++,
+ pkgconf,
+ qt6-base-dev,
+ qt6-base-dev-tools,
+ qt6-declarative-dev,
+ qt6-declarative-dev-tools,
+ libx11-dev
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+Homepage: https://github.com/deepin-community/deepswitch
+
+Package: deepswitch
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ libqt6core6,
+ libqt6gui6,
+ libqt6qml6,
+ libqt6quick6,
+ libqt6quickcontrols2-6,
+ libqt6dbus6,
+ libx11-6
+Description: Keyboard-first user-session application switcher for deepin
+ DeepSwitch maps global hotkeys to desktop applications, launching missing
+ apps and focusing or cycling existing windows. It runs as a user-session
+ application and exposes a Qt Quick settings UI; it is not a system daemon.

@@ -1,10 +1,13 @@
 #include "settings/SettingsController.h"
+#include "ipc/AgentDBusContract.h"
 
 #include <QCoreApplication>
+#include <QDBusServiceWatcher>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QTimer>
 #include <QUrl>
 
 using namespace deepswitch;
@@ -19,7 +22,35 @@ int main(int argc, char* argv[])
     QQuickStyle::setStyle(QStringLiteral("Fusion"));
 
     SettingsController settingsController;
+
+    // Initial refresh — works if agent is already running.
     settingsController.refresh();
+
+    // Auto-refresh when the agent D-Bus service appears.
+    QDBusServiceWatcher watcher(
+        AgentDBusContract::ServiceName,
+        QDBusConnection::sessionBus(),
+        QDBusServiceWatcher::WatchForRegistration | QDBusServiceWatcher::WatchForUnregistration);
+    QObject::connect(&watcher, &QDBusServiceWatcher::serviceRegistered,
+                     &settingsController, [&settingsController]() {
+                         settingsController.refresh();
+                     });
+    QObject::connect(&watcher, &QDBusServiceWatcher::serviceUnregistered,
+                     &settingsController, [&settingsController]() {
+                         settingsController.refresh();
+                     });
+
+    // Periodic retry if agent is not yet available (every 3 seconds).
+    if (!settingsController.connected()) {
+        QTimer retryTimer;
+        QObject::connect(&retryTimer, &QTimer::timeout, &settingsController, [&settingsController, &retryTimer] {
+            settingsController.refresh();
+            if (settingsController.connected()) {
+                retryTimer.stop();
+            }
+        });
+        retryTimer.start(3000);
+    }
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty(QStringLiteral("settingsController"), &settingsController);

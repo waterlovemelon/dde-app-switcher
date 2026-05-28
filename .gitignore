@@ -56,3 +56,10 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+# Debian build artifacts
+/debian/
+*.debhelper.log
+*.debhelper-build-stamp
+*.substvars
+debhelper-build-stamp
