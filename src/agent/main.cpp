@@ -11,6 +11,7 @@
 #include "backends/x11/X11HotkeyBackend.h"
 #include "core/AppInfo.h"
 #include "core/Config.h"
+#include "core/ConfigManager.h"
 #include "core/WindowInfo.h"
 #include "ipc/AgentDBusContract.h"
 #include "ipc/AgentDBusService.h"
@@ -39,7 +40,7 @@ int main(int argc, char *argv[])
     QTextStream err(stderr);
 
     const QString configPath = parser.value("config").isEmpty()
-        ? QDir::homePath() + "/.config/deepswitch/config.json"
+        ? ConfigManager::defaultConfigPath()
         : parser.value("config");
 
     AgentController controller(configPath);
@@ -139,6 +140,11 @@ int main(int argc, char *argv[])
     const auto loaded = controller.reloadConfig();
     if (!loaded.ok) {
         err << loaded.errorCode << ": " << loaded.message << "\n";
+        return 2;
+    }
+    const auto autostartSynced = controller.syncAutostart();
+    if (!autostartSynced.ok) {
+        err << autostartSynced.errorCode << ": " << autostartSynced.message << "\n";
         return 2;
     }
 

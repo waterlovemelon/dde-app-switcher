@@ -11,6 +11,65 @@ class AgentControllerTest : public QObject {
     Q_OBJECT
 
 private slots:
+    void reloadConfigDoesNotSyncAutostartFromGeneralConfig()
+    {
+        QTemporaryDir dir;
+        QTemporaryDir configHome;
+        QVERIFY(dir.isValid());
+        QVERIFY(configHome.isValid());
+        const QString configPath = dir.path() + "/config.json";
+        const QByteArray previousConfigHome = qgetenv("XDG_CONFIG_HOME");
+        const bool hadConfigHome = qEnvironmentVariableIsSet("XDG_CONFIG_HOME");
+        qputenv("XDG_CONFIG_HOME", configHome.path().toUtf8());
+
+        Config config = Config::defaults();
+        config.general.autostart = true;
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        AgentController controller(configPath, AgentController::BackendMode::Disabled);
+        QVERIFY2(controller.reloadConfig().ok, qPrintable(controller.status().message));
+        QVERIFY(!QFile::exists(configHome.path() + "/autostart/deepswitch-agent.desktop"));
+
+        if (hadConfigHome) {
+            qputenv("XDG_CONFIG_HOME", previousConfigHome);
+        } else {
+            qunsetenv("XDG_CONFIG_HOME");
+        }
+    }
+
+    void syncAutostartAppliesGeneralConfig()
+    {
+        QTemporaryDir dir;
+        QTemporaryDir configHome;
+        QVERIFY(dir.isValid());
+        QVERIFY(configHome.isValid());
+        const QString configPath = dir.path() + "/config.json";
+        const QByteArray previousConfigHome = qgetenv("XDG_CONFIG_HOME");
+        const bool hadConfigHome = qEnvironmentVariableIsSet("XDG_CONFIG_HOME");
+        qputenv("XDG_CONFIG_HOME", configHome.path().toUtf8());
+
+        Config config = Config::defaults();
+        config.general.autostart = true;
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        AgentController controller(configPath, AgentController::BackendMode::Disabled);
+        QVERIFY2(controller.reloadConfig().ok, qPrintable(controller.status().message));
+        QVERIFY2(controller.syncAutostart().ok, qPrintable(controller.status().message));
+        QVERIFY(QFile::exists(configHome.path() + "/autostart/deepswitch-agent.desktop"));
+
+        config.general.autostart = false;
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+        QVERIFY2(controller.reloadConfig().ok, qPrintable(controller.status().message));
+        QVERIFY2(controller.syncAutostart().ok, qPrintable(controller.status().message));
+        QVERIFY(!QFile::exists(configHome.path() + "/autostart/deepswitch-agent.desktop"));
+
+        if (hadConfigHome) {
+            qputenv("XDG_CONFIG_HOME", previousConfigHome);
+        } else {
+            qunsetenv("XDG_CONFIG_HOME");
+        }
+    }
+
     void reloadConfigMakesBindingsAvailable()
     {
         QTemporaryDir dir;

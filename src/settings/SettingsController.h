@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/AutostartManager.h"
 #include "ipc/AgentDBusClient.h"
 
 #include <QObject>
@@ -20,10 +21,12 @@ class SettingsController : public QObject {
     Q_PROPERTY(QVariantMap backendStatus READ backendStatus NOTIFY backendStatusChanged)
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
     Q_PROPERTY(QString lastErrorCode READ lastErrorCode NOTIFY lastErrorCodeChanged)
+    Q_PROPERTY(bool autostartEnabled READ autostartEnabled NOTIFY autostartEnabledChanged)
 
 public:
     explicit SettingsController(QObject* parent = nullptr);
     explicit SettingsController(AgentClientInterface& client, QObject* parent = nullptr);
+    SettingsController(AgentClientInterface& client, QString configPath, QObject* parent = nullptr);
     ~SettingsController() override;
 
     bool connected() const;
@@ -33,12 +36,14 @@ public:
     QVariantMap backendStatus() const;
     QString lastError() const;
     QString lastErrorCode() const;
+    bool autostartEnabled() const;
 
     Q_INVOKABLE void refresh();
     Q_INVOKABLE bool saveBinding(const QVariantMap& binding);
     Q_INVOKABLE bool removeBinding(const QString& bindingId);
     Q_INVOKABLE bool testHotkey(const QString& hotkey, const QString& excludeId = QString());
     Q_INVOKABLE bool launchApp(const QString& desktopId);
+    Q_INVOKABLE bool setAutostartEnabled(bool enabled);
 
 signals:
     void connectedChanged();
@@ -48,6 +53,7 @@ signals:
     void backendStatusChanged();
     void lastErrorChanged();
     void lastErrorCodeChanged();
+    void autostartEnabledChanged();
 
 private:
     bool ensureAvailable();
@@ -61,10 +67,14 @@ private:
     void setLastErrorResult(const AgentCallResult& result);
     bool applyOperationResult(const AgentCallResult& result);
     void clearData();
+    void updateAutostartEnabled(bool enabled);
 
     std::unique_ptr<AgentClientInterface> m_ownedClient;
     AgentClientInterface* m_client = nullptr;
+    AutostartManager m_autostartManager;
+    QString m_configPath;
     bool m_connected = false;
+    bool m_autostartEnabled = false;
     QVariantMap m_status;
     QVariantList m_bindings;
     QVariantList m_applications;

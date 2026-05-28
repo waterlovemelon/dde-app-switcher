@@ -6,6 +6,7 @@
 #include "core/ActionEngine.h"
 #include "core/AppMatcher.h"
 #include "core/AppRegistry.h"
+#include "core/AutostartManager.h"
 #include "core/ConfigManager.h"
 #include "core/Hotkey.h"
 #include "core/Launcher.h"
@@ -166,6 +167,11 @@ VoidResult AgentController::reloadConfig()
     m_status.enabled = m_config.general.enabled;
     updateState(m_config.general.enabled ? AgentControllerState::Running : AgentControllerState::Paused);
     return VoidResult::success();
+}
+
+VoidResult AgentController::syncAutostart() const
+{
+    return AutostartManager().setEnabled(m_config.general.autostart);
 }
 
 void AgentController::pause()

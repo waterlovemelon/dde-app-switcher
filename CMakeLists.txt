@@ -19,6 +19,7 @@ add_library(deepswitch_core
     src/core/ActionEngine.cpp
     src/core/AppMatcher.cpp
     src/core/AppRegistry.cpp
+    src/core/AutostartManager.cpp
     src/core/Config.cpp
     src/core/ConfigManager.cpp
     src/core/DesktopEntry.cpp

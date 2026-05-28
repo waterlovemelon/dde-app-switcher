@@ -9,6 +9,7 @@
 #include <QSaveFile>
 #include <QSet>
 #include <QLoggingCategory>
+#include <QStandardPaths>
 #include <utility>
 
 Q_LOGGING_CATEGORY(lcConfig, "deepswitch.config")
@@ -18,6 +19,12 @@ namespace deepswitch {
 ConfigManager::ConfigManager(QString path)
     : m_path(std::move(path))
 {
+}
+
+QString ConfigManager::defaultConfigPath()
+{
+    const QString configHome = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
+    return QDir(configHome).filePath("deepswitch/config.json");
 }
 
 static MatchRule matchRuleFromJson(const QJsonObject& object)

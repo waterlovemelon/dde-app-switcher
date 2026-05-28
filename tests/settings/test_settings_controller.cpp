@@ -1,6 +1,11 @@
 #include <QtTest/QtTest>
 
+#include "core/ConfigManager.h"
 #include "settings/SettingsController.h"
+
+#include <QDir>
+#include <QFile>
+#include <QTemporaryDir>
 
 using namespace deepswitch;
 
@@ -100,6 +105,109 @@ class SettingsControllerTest : public QObject {
     Q_OBJECT
 
 private slots:
+    void autostartToggleWorksWithoutAgentConnection()
+    {
+        QTemporaryDir configHome;
+        QVERIFY(configHome.isValid());
+        const QByteArray previousConfigHome = qgetenv("XDG_CONFIG_HOME");
+        const bool hadConfigHome = qEnvironmentVariableIsSet("XDG_CONFIG_HOME");
+        qputenv("XDG_CONFIG_HOME", configHome.path().toUtf8());
+
+        FakeAgentClient client;
+        client.available = false;
+        const QString configPath = configHome.path() + "/deepswitch/config.json";
+        SettingsController controller(client, configPath);
+        QSignalSpy autostartChanged(&controller, &SettingsController::autostartEnabledChanged);
+
+        QCOMPARE(controller.autostartEnabled(), false);
+        QCOMPARE(controller.setAutostartEnabled(true), true);
+        QCOMPARE(controller.autostartEnabled(), true);
+        QVERIFY(QFile::exists(configHome.path() + "/autostart/deepswitch-agent.desktop"));
+        const auto enabledConfig = ConfigManager(configPath).load();
+        QVERIFY(enabledConfig.ok);
+        QCOMPARE(enabledConfig.value.general.autostart, true);
+        QCOMPARE(autostartChanged.count(), 1);
+
+        QCOMPARE(controller.setAutostartEnabled(false), true);
+        QCOMPARE(controller.autostartEnabled(), false);
+        QVERIFY(!QFile::exists(configHome.path() + "/autostart/deepswitch-agent.desktop"));
+        const auto disabledConfig = ConfigManager(configPath).load();
+        QVERIFY(disabledConfig.ok);
+        QCOMPARE(disabledConfig.value.general.autostart, false);
+        QCOMPARE(autostartChanged.count(), 2);
+        QCOMPARE(controller.connected(), false);
+
+        if (hadConfigHome) {
+            qputenv("XDG_CONFIG_HOME", previousConfigHome);
+        } else {
+            qunsetenv("XDG_CONFIG_HOME");
+        }
+    }
+
+    void autostartToggleInitializesFromConfig()
+    {
+        QTemporaryDir configHome;
+        QVERIFY(configHome.isValid());
+        const QByteArray previousConfigHome = qgetenv("XDG_CONFIG_HOME");
+        const bool hadConfigHome = qEnvironmentVariableIsSet("XDG_CONFIG_HOME");
+        qputenv("XDG_CONFIG_HOME", configHome.path().toUtf8());
+
+        const QString configPath = configHome.path() + "/deepswitch/config.json";
+        Config config = Config::defaults();
+        config.general.autostart = true;
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        FakeAgentClient client;
+        SettingsController controller(client, configPath);
+
+        QCOMPARE(controller.autostartEnabled(), true);
+
+        if (hadConfigHome) {
+            qputenv("XDG_CONFIG_HOME", previousConfigHome);
+        } else {
+            qunsetenv("XDG_CONFIG_HOME");
+        }
+    }
+
+    void autostartToggleFailureDoesNotPersistConfig()
+    {
+        QTemporaryDir configHome;
+        QVERIFY(configHome.isValid());
+        const QByteArray previousConfigHome = qgetenv("XDG_CONFIG_HOME");
+        const bool hadConfigHome = qEnvironmentVariableIsSet("XDG_CONFIG_HOME");
+        qputenv("XDG_CONFIG_HOME", configHome.path().toUtf8());
+
+        QVERIFY(QDir().mkpath(configHome.path() + "/autostart"));
+        QFile customAutostart(configHome.path() + "/autostart/deepswitch-agent.desktop");
+        QVERIFY(customAutostart.open(QIODevice::WriteOnly | QIODevice::Text));
+        customAutostart.write("[Desktop Entry]\n"
+                              "Type=Application\n"
+                              "Name=Custom DeepSwitch Agent\n"
+                              "Exec=deepswitch-agent --custom\n");
+        customAutostart.close();
+
+        const QString configPath = configHome.path() + "/deepswitch/config.json";
+        Config config = Config::defaults();
+        config.general.autostart = false;
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        FakeAgentClient client;
+        SettingsController controller(client, configPath);
+
+        QCOMPARE(controller.setAutostartEnabled(true), false);
+        QCOMPARE(controller.autostartEnabled(), false);
+        QCOMPARE(controller.lastErrorCode(), QString("autostart_conflict"));
+        const auto loaded = ConfigManager(configPath).load();
+        QVERIFY(loaded.ok);
+        QCOMPARE(loaded.value.general.autostart, false);
+
+        if (hadConfigHome) {
+            qputenv("XDG_CONFIG_HOME", previousConfigHome);
+        } else {
+            qunsetenv("XDG_CONFIG_HOME");
+        }
+    }
+
     void refreshPublishesStatusBindingsAndApplications()
     {
         FakeAgentClient client;

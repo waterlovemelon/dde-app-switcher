@@ -1,5 +1,7 @@
 #include "settings/SettingsController.h"
 
+#include "core/ConfigManager.h"
+
 #include <utility>
 
 namespace deepswitch {
@@ -14,18 +16,36 @@ QString operationErrorMessage(const AgentCallResult& result)
     return result.errorCode;
 }
 
+bool configuredAutostartEnabled(const QString& configPath, const AutostartManager& autostartManager)
+{
+    const auto loaded = ConfigManager(configPath).load();
+    if (loaded.ok) {
+        return loaded.value.general.autostart;
+    }
+    return autostartManager.isEnabled();
+}
+
 }
 
 SettingsController::SettingsController(QObject* parent)
     : QObject(parent)
     , m_ownedClient(std::make_unique<AgentDBusClient>())
     , m_client(m_ownedClient.get())
+    , m_configPath(ConfigManager::defaultConfigPath())
+    , m_autostartEnabled(configuredAutostartEnabled(m_configPath, m_autostartManager))
 {
 }
 
 SettingsController::SettingsController(AgentClientInterface& client, QObject* parent)
+    : SettingsController(client, ConfigManager::defaultConfigPath(), parent)
+{
+}
+
+SettingsController::SettingsController(AgentClientInterface& client, QString configPath, QObject* parent)
     : QObject(parent)
     , m_client(&client)
+    , m_configPath(std::move(configPath))
+    , m_autostartEnabled(configuredAutostartEnabled(m_configPath, m_autostartManager))
 {
 }
 
@@ -64,6 +84,11 @@ QString SettingsController::lastError() const
 QString SettingsController::lastErrorCode() const
 {
     return m_lastErrorCode;
+}
+
+bool SettingsController::autostartEnabled() const
+{
+    return m_autostartEnabled;
 }
 
 void SettingsController::refresh()
@@ -138,6 +163,41 @@ bool SettingsController::launchApp(const QString& desktopId)
         return false;
     }
     return applyOperationResult(m_client->launchApp(desktopId));
+}
+
+bool SettingsController::setAutostartEnabled(bool enabled)
+{
+    ConfigManager configManager(m_configPath);
+    auto loaded = configManager.load();
+    if (!loaded.ok) {
+        setLastErrorResult(AgentCallResult::failure(loaded.errorCode, loaded.message));
+        return false;
+    }
+
+    Config config = loaded.value;
+    const bool previousAutostart = config.general.autostart;
+
+    const auto result = m_autostartManager.setEnabled(enabled);
+    if (!result.ok) {
+        setLastError(result.message);
+        setLastErrorCode(result.errorCode);
+        updateAutostartEnabled(previousAutostart);
+        return false;
+    }
+
+    config.general.autostart = enabled;
+    const auto saved = configManager.save(config);
+    if (!saved.ok) {
+        m_autostartManager.setEnabled(previousAutostart);
+        updateAutostartEnabled(previousAutostart);
+        setLastErrorResult(AgentCallResult::failure(saved.errorCode, saved.message));
+        return false;
+    }
+
+    updateAutostartEnabled(enabled);
+    setLastError(QString());
+    setLastErrorCode(QString());
+    return true;
 }
 
 bool SettingsController::ensureAvailable()
@@ -237,6 +297,15 @@ void SettingsController::clearData()
     setBackendStatus({});
     setBindings({});
     setApplications({});
+}
+
+void SettingsController::updateAutostartEnabled(bool enabled)
+{
+    if (m_autostartEnabled == enabled) {
+        return;
+    }
+    m_autostartEnabled = enabled;
+    emit autostartEnabledChanged();
 }
 
 }

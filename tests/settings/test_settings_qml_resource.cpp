@@ -55,6 +55,18 @@ private slots:
         QVERIFY(qml.contains("Qt.Key_Minus"));
         QVERIFY(qml.contains("event.text && event.text.length === 1"));
     }
+
+    void mainQmlContainsAutostartToggle()
+    {
+        QFile mainQml(QFINDTESTDATA("../../src/settings/qml/Main.qml"));
+        QVERIFY(mainQml.open(QIODevice::ReadOnly | QIODevice::Text));
+
+        const QString qml = QString::fromUtf8(mainQml.readAll());
+        QVERIFY(qml.contains("Launch agent at login"));
+        QVERIFY(qml.contains("settingsController.autostartEnabled"));
+        QVERIFY(qml.contains("settingsController.setAutostartEnabled"));
+        QVERIFY(!qml.contains("checked = settingsController.autostartEnabled"));
+    }
 };
 
 QTEST_MAIN(SettingsQmlResourceTest)

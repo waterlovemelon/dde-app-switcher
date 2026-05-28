@@ -57,6 +57,7 @@ public:
         HotkeyTestFn hotkeyTester = {});
 
     VoidResult reloadConfig();
+    VoidResult syncAutostart() const;
     void pause();
     void resume();
     Result<QString> triggerAction(const QString& actionId);

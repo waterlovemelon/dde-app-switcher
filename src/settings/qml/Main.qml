@@ -130,6 +130,56 @@ ApplicationWindow {
                     Layout.fillHeight: true
                 }
 
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: autostartContent.implicitHeight + 22
+                    radius: 14
+                    color: "#edf4f6"
+                    border.width: 1
+                    border.color: "#d4e2e7"
+
+                    RowLayout {
+                        id: autostartContent
+
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.margins: 12
+                        spacing: 10
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: qsTr("Launch agent at login")
+                                color: "#18333f"
+                                font.pixelSize: 13
+                                font.weight: Font.DemiBold
+                                wrapMode: Text.WordWrap
+                            }
+
+                            MutedText {
+                                Layout.fillWidth: true
+                                text: qsTr("Uses your user autostart folder.")
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+
+                        Switch {
+                            id: autostartSwitch
+
+                            checked: settingsController.autostartEnabled
+                            onToggled: {
+                                if (checked !== settingsController.autostartEnabled) {
+                                    settingsController.setAutostartEnabled(checked)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Button {
                     Layout.fillWidth: true
                     text: qsTr("Refresh Agent")
