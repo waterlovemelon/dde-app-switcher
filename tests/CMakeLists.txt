@@ -36,3 +36,5 @@ add_deepswitch_test(test_settings_qml_resource
     settings/test_settings_qml_resource.cpp
     ${CMAKE_SOURCE_DIR}/src/settings/qml/qml.qrc
 )
+
+add_deepswitch_test(test_linux_desktop_entry packaging/test_linux_desktop_entry.cpp)

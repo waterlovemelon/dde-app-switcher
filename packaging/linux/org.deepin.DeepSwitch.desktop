@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=DeepSwitch
+Comment=Configure DeepSwitch app switching
+Exec=deepswitch-settings
+Icon=deepswitch
+Categories=Settings;Utility;
+StartupNotify=true
+Terminal=false

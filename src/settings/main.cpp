@@ -13,6 +13,7 @@ int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
     QGuiApplication::setApplicationName(QStringLiteral("DeepSwitch Settings"));
+    QGuiApplication::setDesktopFileName(QStringLiteral("org.deepin.DeepSwitch"));
     QGuiApplication::setOrganizationName(QStringLiteral("DeepSwitch"));
 
     QQuickStyle::setStyle(QStringLiteral("Fusion"));

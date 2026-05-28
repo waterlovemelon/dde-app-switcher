@@ -9,13 +9,15 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include(GNUInstallDirs)
+
 find_package(Qt6 REQUIRED COMPONENTS Core Test Gui DBus)
 find_package(Qt6 COMPONENTS Qml Quick QuickControls2 QUIET)
 find_package(X11 REQUIRED)
 
 enable_testing()
 
-add_library(deepswitch_core
+add_library(deepswitch_core STATIC
     src/core/ActionEngine.cpp
     src/core/AppMatcher.cpp
     src/core/AppRegistry.cpp
@@ -35,7 +37,7 @@ target_link_libraries(deepswitch_core PUBLIC
     Qt6::Core
 )
 
-add_library(deepswitch_x11
+add_library(deepswitch_x11 STATIC
     src/backends/x11/X11Connection.cpp
     src/backends/x11/X11HotkeyBackend.cpp
     src/backends/x11/X11WindowBackend.cpp
@@ -52,7 +54,7 @@ target_link_libraries(deepswitch_x11 PUBLIC
     X11::X11
 )
 
-add_library(deepswitch_ipc
+add_library(deepswitch_ipc STATIC
     src/ipc/AgentDBusClient.cpp
     src/ipc/AgentTypes.cpp
 )
@@ -67,7 +69,7 @@ target_link_libraries(deepswitch_ipc PUBLIC
     Qt6::DBus
 )
 
-add_library(deepswitch_settings
+add_library(deepswitch_settings STATIC
     src/settings/SettingsController.cpp
 )
 
@@ -80,7 +82,7 @@ target_link_libraries(deepswitch_settings PUBLIC
     Qt6::Core
 )
 
-add_library(deepswitch_agent
+add_library(deepswitch_agent STATIC
     src/agent/AgentController.cpp
     src/ipc/AgentDBusService.cpp
 )
@@ -109,6 +111,10 @@ target_link_libraries(deepswitch-agent PRIVATE
     Qt6::DBus
 )
 
+install(TARGETS deepswitch-agent
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
 if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
     add_executable(deepswitch-settings
         src/settings/main.cpp
@@ -124,8 +130,20 @@ if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
         Qt6::QuickControls2
         Qt6::DBus
     )
+
+    install(TARGETS deepswitch-settings
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+    install(FILES packaging/linux/org.deepin.DeepSwitch.desktop
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
+    )
+
+    install(FILES packaging/linux/icons/hicolor/scalable/apps/deepswitch.svg
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
+    )
 else()
-    message(STATUS "Qt6 QML/Quick development packages not found; skipping deepswitch-settings GUI target")
+    message(STATUS "Qt6 QML/Quick development packages not found; skipping deepswitch-settings GUI target and launcher entry install")
 endif()
 
 add_subdirectory(tests)
