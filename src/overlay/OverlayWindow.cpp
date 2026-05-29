@@ -20,7 +20,7 @@ OverlayWindow::OverlayWindow(QVariantList apps, QObject* parent)
     auto* view = new QQuickView;
     m_window = view;
 
-    view->setFlags(Qt::Dialog | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus);
+    view->setFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus);
     view->setColor(Qt::transparent);
     view->setResizeMode(QQuickView::SizeRootObjectToView);
 
@@ -44,7 +44,7 @@ OverlayWindow::OverlayWindow(QString kind, QString message, QObject* parent)
     auto* view = new QQuickView;
     m_window = view;
 
-    view->setFlags(Qt::Dialog | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus);
+    view->setFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus);
     view->setColor(Qt::transparent);
     view->setResizeMode(QQuickView::SizeRootObjectToView);
 
