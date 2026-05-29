@@ -23,6 +23,7 @@ class SettingsController : public QObject {
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
     Q_PROPERTY(QString lastErrorCode READ lastErrorCode NOTIFY lastErrorCodeChanged)
     Q_PROPERTY(bool autostartEnabled READ autostartEnabled NOTIFY autostartEnabledChanged)
+    Q_PROPERTY(QString language READ language NOTIFY languageChanged)
 
 public:
     explicit SettingsController(QObject* parent = nullptr);
@@ -39,6 +40,7 @@ public:
     QString lastError() const;
     QString lastErrorCode() const;
     bool autostartEnabled() const;
+    QString language() const;
 
     Q_INVOKABLE void refresh();
     Q_INVOKABLE bool saveBinding(const QVariantMap& binding);
@@ -47,6 +49,7 @@ public:
     Q_INVOKABLE bool launchApp(const QString& desktopId);
     Q_INVOKABLE bool refreshWindowDiagnostics(const QString& appId);
     Q_INVOKABLE bool setAutostartEnabled(bool enabled);
+    Q_INVOKABLE bool setLanguage(const QString& language);
 
 signals:
     void connectedChanged();
@@ -58,6 +61,7 @@ signals:
     void lastErrorChanged();
     void lastErrorCodeChanged();
     void autostartEnabledChanged();
+    void languageChanged();
 
 private:
     bool ensureAvailable();
@@ -80,6 +84,7 @@ private:
     QString m_configPath;
     bool m_connected = false;
     bool m_autostartEnabled = false;
+    QString m_language = "system";
     QVariantMap m_status;
     QVariantList m_bindings;
     QVariantList m_applications;

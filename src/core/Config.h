@@ -23,6 +23,7 @@ struct GeneralConfig {
     QString sessionBackend = "auto";
     bool showOverlay = true;
     QString logLevel = "info";
+    QString language = "system"; // "system", "en", "zh_CN"
 };
 
 struct HotkeyConfig {

@@ -132,6 +132,71 @@ ApplicationWindow {
 
                 Rectangle {
                     Layout.fillWidth: true
+                    implicitHeight: languageContent.implicitHeight + 22
+                    radius: 14
+                    color: "#edf4f6"
+                    border.width: 1
+                    border.color: "#d4e2e7"
+
+                    RowLayout {
+                        id: languageContent
+
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.margins: 12
+                        spacing: 10
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: qsTr("Language")
+                                color: "#18333f"
+                                font.pixelSize: 13
+                                font.weight: Font.DemiBold
+                                wrapMode: Text.WordWrap
+                            }
+
+                            MutedText {
+                                Layout.fillWidth: true
+                                text: qsTr("Restart to apply.")
+                                visible: languageCombo.currentValue !== settingsController.language
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+
+                        ComboBox {
+                            id: languageCombo
+                            Layout.preferredWidth: 120
+                            textRole: "label"
+                            valueRole: "value"
+                            model: [
+                                { "label": qsTr("Follow System"), "value": "system" },
+                                { "label": "English", "value": "en" },
+                                { "label": qsTr("Chinese"), "value": "zh_CN" }
+                            ]
+                            currentIndex: {
+                                for (var i = 0; i < model.length; ++i) {
+                                    if (model[i].value === settingsController.language)
+                                        return i
+                                }
+                                return 0
+                            }
+                            onActivated: function(index) {
+                                var newValue = model[index].value
+                                if (newValue !== settingsController.language) {
+                                    settingsController.setLanguage(newValue)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
                     implicitHeight: autostartContent.implicitHeight + 22
                     radius: 14
                     color: "#edf4f6"

@@ -119,6 +119,7 @@ Result<Config> ConfigManager::load() const
     config.general.sessionBackend = general.value("session_backend").toString("auto");
     config.general.showOverlay = general.value("show_overlay").toBool(true);
     config.general.logLevel = general.value("log_level").toString("info");
+    config.general.language = general.value("language").toString("system");
 
     const QJsonObject hotkey = root.value("hotkey").toObject();
     config.hotkey.mode = hotkeyModeFromString(hotkey.value("mode").toString("direct"));
@@ -165,6 +166,7 @@ VoidResult ConfigManager::save(const Config& config) const
     general["session_backend"] = config.general.sessionBackend;
     general["show_overlay"] = config.general.showOverlay;
     general["log_level"] = config.general.logLevel;
+    general["language"] = config.general.language;
     root["general"] = general;
 
     QJsonObject hotkey;

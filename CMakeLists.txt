@@ -17,6 +17,48 @@ find_package(X11 REQUIRED)
 
 enable_testing()
 
+# --- Translation build (ts → qm) ---
+find_package(Qt6 COMPONENTS LinguistTools QUIET)
+
+set(TRANSLATION_TS_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/translations/deepswitch_zh_CN.ts
+)
+set(TRANSLATION_QM_DIR ${CMAKE_CURRENT_BINARY_DIR}/translations)
+file(MAKE_DIRECTORY ${TRANSLATION_QM_DIR})
+
+if(Qt6LinguistTools_FOUND)
+    qt_add_translations(deepswitch-core
+        TS_FILES ${TRANSLATION_TS_FILES}
+        QM_FILES_OUTPUT_VARIABLE TRANSLATION_QM_FILES
+    )
+else()
+    # Fallback: use lrelease (from qt6-l10n-tools or linglong) to compile .ts → .qm
+    set(TRANSLATION_QM_FILES "")
+    foreach(ts_file ${TRANSLATION_TS_FILES})
+        get_filename_component(ts_name ${ts_file} NAME_WE)
+        set(qm_file ${TRANSLATION_QM_DIR}/${ts_name}.qm)
+        add_custom_command(
+            OUTPUT ${qm_file}
+            COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/translations/compile_translations.sh
+                ${ts_file} ${qm_file}
+            DEPENDS ${ts_file} ${CMAKE_CURRENT_SOURCE_DIR}/translations/compile_translations.sh
+            COMMENT "Compiling translation: ${ts_name}.ts → ${ts_name}.qm"
+        )
+        list(APPEND TRANSLATION_QM_FILES ${qm_file})
+    endforeach()
+
+    # Generate translations resource file
+    set(TRANSLATION_QRC ${TRANSLATION_QM_DIR}/translations.qrc)
+    file(WRITE ${TRANSLATION_QRC} "<RCC><qresource prefix=\"/i18n\">\n")
+    foreach(qm_file ${TRANSLATION_QM_FILES})
+        get_filename_component(qm_name ${qm_file} NAME)
+        file(APPEND ${TRANSLATION_QRC} "    <file>${qm_name}</file>\n")
+    endforeach()
+    file(APPEND ${TRANSLATION_QRC} "</qresource></RCC>\n")
+
+    set(TRANSLATION_QRC ${TRANSLATION_QM_DIR}/translations.qrc)
+endif()
+
 add_library(deepswitch_core STATIC
     src/core/ActionEngine.cpp
     src/core/AppMatcher.cpp
@@ -132,6 +174,8 @@ if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
         src/overlay/OverlayWindow.cpp
         src/overlay/OverlayWindow.h
         src/overlay/qml/qml.qrc
+        ${TRANSLATION_QM_FILES}
+        ${TRANSLATION_QRC}
     )
 
     target_include_directories(deepswitch-overlay PRIVATE
@@ -152,6 +196,8 @@ if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
     add_executable(deepswitch-settings
         src/settings/main.cpp
         src/settings/qml/qml.qrc
+        ${TRANSLATION_QM_FILES}
+        ${TRANSLATION_QRC}
     )
 
     target_link_libraries(deepswitch-settings PRIVATE

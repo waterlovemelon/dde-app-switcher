@@ -3,7 +3,9 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QGuiApplication>
+#include <QLocale>
 #include <QTimer>
+#include <QTranslator>
 
 using namespace deepswitch;
 
@@ -12,6 +14,11 @@ int main(int argc, char* argv[])
     QGuiApplication app(argc, argv);
     QGuiApplication::setApplicationName(QStringLiteral("deepswitch-overlay"));
     QGuiApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+
+    QTranslator translator;
+    if (translator.load(QLocale::system(), "deepswitch", "_", ":/i18n")) {
+        QGuiApplication::installTranslator(&translator);
+    }
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("DeepSwitch action overlay"));

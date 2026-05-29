@@ -1,8 +1,11 @@
 #include "settings/SettingsController.h"
+#include "core/ConfigManager.h"
 #include "ipc/AgentDBusContract.h"
 
 #include <QCoreApplication>
 #include <QDBusServiceWatcher>
+#include <QLocale>
+#include <QTranslator>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -18,6 +21,16 @@ int main(int argc, char* argv[])
     QGuiApplication::setApplicationName(QStringLiteral("DeepSwitch Settings"));
     QGuiApplication::setDesktopFileName(QStringLiteral("org.deepin.DeepSwitch"));
     QGuiApplication::setOrganizationName(QStringLiteral("DeepSwitch"));
+
+    // Load language preference from config
+    const auto configResult = ConfigManager(ConfigManager::defaultConfigPath()).load();
+    const QString lang = configResult.ok ? configResult.value.general.language : "system";
+
+    const QLocale locale = (lang == "system") ? QLocale::system() : QLocale(lang);
+    QTranslator translator;
+    if (translator.load(locale, "deepswitch", "_", ":/i18n")) {
+        QGuiApplication::installTranslator(&translator);
+    }
 
     QQuickStyle::setStyle(QStringLiteral("Fusion"));
 
