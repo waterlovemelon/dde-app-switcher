@@ -2,8 +2,14 @@
     <qresource prefix="/qml">
         <file>Main.qml</file>
         <file>BindingsPage.qml</file>
-        <file>BackendStatusPage.qml</file>
+        <file>SettingsPage.qml</file>
+        <file>AboutPage.qml</file>
         <file>ApplicationPicker.qml</file>
         <file>HotkeyRecorder.qml</file>
+        <file>StyledButton.qml</file>
+        <file>StyledSwitch.qml</file>
+        <file>StyledComboBox.qml</file>
+        <file>StyledTextField.qml</file>
+        <file>StyledCheckBox.qml</file>
     </qresource>
 </RCC>

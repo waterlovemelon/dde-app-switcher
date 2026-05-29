@@ -25,6 +25,15 @@ bool configuredAutostartEnabled(const QString& configPath, const AutostartManage
     return autostartManager.isEnabled();
 }
 
+Config loadConfigOrDefaults(const QString& configPath)
+{
+    const auto loaded = ConfigManager(configPath).load();
+    if (loaded.ok) {
+        return loaded.value;
+    }
+    return Config::defaults();
+}
+
 }
 
 SettingsController::SettingsController(QObject* parent)
@@ -34,6 +43,11 @@ SettingsController::SettingsController(QObject* parent)
     , m_configPath(ConfigManager::defaultConfigPath())
     , m_autostartEnabled(configuredAutostartEnabled(m_configPath, m_autostartManager))
 {
+    const auto config = loadConfigOrDefaults(m_configPath);
+    m_showOverlay = config.general.showOverlay;
+    m_defaultWindowStrategy = multiWindowStrategyToString(config.window.defaultStrategy).toLower();
+    m_includeAllWorkspaces = config.window.includeAllWorkspaces;
+    m_switchWorkspaceWhenNeeded = config.window.switchWorkspaceWhenNeeded;
 }
 
 SettingsController::SettingsController(AgentClientInterface& client, QObject* parent)
@@ -47,6 +61,11 @@ SettingsController::SettingsController(AgentClientInterface& client, QString con
     , m_configPath(std::move(configPath))
     , m_autostartEnabled(configuredAutostartEnabled(m_configPath, m_autostartManager))
 {
+    const auto config = loadConfigOrDefaults(m_configPath);
+    m_showOverlay = config.general.showOverlay;
+    m_defaultWindowStrategy = multiWindowStrategyToString(config.window.defaultStrategy).toLower();
+    m_includeAllWorkspaces = config.window.includeAllWorkspaces;
+    m_switchWorkspaceWhenNeeded = config.window.switchWorkspaceWhenNeeded;
 }
 
 SettingsController::~SettingsController() = default;
@@ -94,6 +113,26 @@ QString SettingsController::lastErrorCode() const
 bool SettingsController::autostartEnabled() const
 {
     return m_autostartEnabled;
+}
+
+bool SettingsController::showOverlay() const
+{
+    return m_showOverlay;
+}
+
+QString SettingsController::defaultWindowStrategy() const
+{
+    return m_defaultWindowStrategy;
+}
+
+bool SettingsController::includeAllWorkspaces() const
+{
+    return m_includeAllWorkspaces;
+}
+
+bool SettingsController::switchWorkspaceWhenNeeded() const
+{
+    return m_switchWorkspaceWhenNeeded;
 }
 
 void SettingsController::refresh()
@@ -220,6 +259,76 @@ bool SettingsController::setAutostartEnabled(bool enabled)
     }
 
     updateAutostartEnabled(enabled);
+    setLastError(QString());
+    setLastErrorCode(QString());
+    return true;
+}
+
+bool SettingsController::setShowOverlay(bool enabled)
+{
+    return saveGeneralConfig([enabled](Config& config) {
+        config.general.showOverlay = enabled;
+    });
+}
+
+bool SettingsController::setDefaultWindowStrategy(const QString& strategy)
+{
+    return saveGeneralConfig([strategy](Config& config) {
+        config.window.defaultStrategy = multiWindowStrategyFromString(strategy);
+    });
+}
+
+bool SettingsController::setIncludeAllWorkspaces(bool enabled)
+{
+    return saveGeneralConfig([enabled](Config& config) {
+        config.window.includeAllWorkspaces = enabled;
+    });
+}
+
+bool SettingsController::setSwitchWorkspaceWhenNeeded(bool enabled)
+{
+    return saveGeneralConfig([enabled](Config& config) {
+        config.window.switchWorkspaceWhenNeeded = enabled;
+    });
+}
+
+bool SettingsController::saveGeneralConfig(std::function<void(Config&)> modifier)
+{
+    ConfigManager configManager(m_configPath);
+    auto loaded = configManager.load();
+    if (!loaded.ok) {
+        setLastErrorResult(AgentCallResult::failure(loaded.errorCode, loaded.message));
+        return false;
+    }
+
+    Config config = loaded.value;
+    modifier(config);
+
+    const auto saved = configManager.save(config);
+    if (!saved.ok) {
+        setLastErrorResult(AgentCallResult::failure(saved.errorCode, saved.message));
+        return false;
+    }
+
+    // Update cached values
+    if (m_showOverlay != config.general.showOverlay) {
+        m_showOverlay = config.general.showOverlay;
+        emit showOverlayChanged();
+    }
+    const QString newStrategy = multiWindowStrategyToString(config.window.defaultStrategy).toLower();
+    if (m_defaultWindowStrategy != newStrategy) {
+        m_defaultWindowStrategy = newStrategy;
+        emit defaultWindowStrategyChanged();
+    }
+    if (m_includeAllWorkspaces != config.window.includeAllWorkspaces) {
+        m_includeAllWorkspaces = config.window.includeAllWorkspaces;
+        emit includeAllWorkspacesChanged();
+    }
+    if (m_switchWorkspaceWhenNeeded != config.window.switchWorkspaceWhenNeeded) {
+        m_switchWorkspaceWhenNeeded = config.window.switchWorkspaceWhenNeeded;
+        emit switchWorkspaceWhenNeededChanged();
+    }
+
     setLastError(QString());
     setLastErrorCode(QString());
     return true;

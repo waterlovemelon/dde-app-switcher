@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/AutostartManager.h"
+#include "core/Config.h"
 #include "ipc/AgentDBusClient.h"
 
 #include <QObject>
@@ -8,6 +9,7 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+#include <functional>
 #include <memory>
 
 namespace deepswitch {
@@ -23,6 +25,10 @@ class SettingsController : public QObject {
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
     Q_PROPERTY(QString lastErrorCode READ lastErrorCode NOTIFY lastErrorCodeChanged)
     Q_PROPERTY(bool autostartEnabled READ autostartEnabled NOTIFY autostartEnabledChanged)
+    Q_PROPERTY(bool showOverlay READ showOverlay NOTIFY showOverlayChanged)
+    Q_PROPERTY(QString defaultWindowStrategy READ defaultWindowStrategy NOTIFY defaultWindowStrategyChanged)
+    Q_PROPERTY(bool includeAllWorkspaces READ includeAllWorkspaces NOTIFY includeAllWorkspacesChanged)
+    Q_PROPERTY(bool switchWorkspaceWhenNeeded READ switchWorkspaceWhenNeeded NOTIFY switchWorkspaceWhenNeededChanged)
 
 public:
     explicit SettingsController(QObject* parent = nullptr);
@@ -39,6 +45,10 @@ public:
     QString lastError() const;
     QString lastErrorCode() const;
     bool autostartEnabled() const;
+    bool showOverlay() const;
+    QString defaultWindowStrategy() const;
+    bool includeAllWorkspaces() const;
+    bool switchWorkspaceWhenNeeded() const;
 
     Q_INVOKABLE void refresh();
     Q_INVOKABLE bool saveBinding(const QVariantMap& binding);
@@ -47,6 +57,10 @@ public:
     Q_INVOKABLE bool launchApp(const QString& desktopId);
     Q_INVOKABLE bool refreshWindowDiagnostics(const QString& appId);
     Q_INVOKABLE bool setAutostartEnabled(bool enabled);
+    Q_INVOKABLE bool setShowOverlay(bool enabled);
+    Q_INVOKABLE bool setDefaultWindowStrategy(const QString& strategy);
+    Q_INVOKABLE bool setIncludeAllWorkspaces(bool enabled);
+    Q_INVOKABLE bool setSwitchWorkspaceWhenNeeded(bool enabled);
 
 signals:
     void connectedChanged();
@@ -58,6 +72,10 @@ signals:
     void lastErrorChanged();
     void lastErrorCodeChanged();
     void autostartEnabledChanged();
+    void showOverlayChanged();
+    void defaultWindowStrategyChanged();
+    void includeAllWorkspacesChanged();
+    void switchWorkspaceWhenNeededChanged();
 
 private:
     bool ensureAvailable();
@@ -73,6 +91,7 @@ private:
     bool applyOperationResult(const AgentCallResult& result);
     void clearData();
     void updateAutostartEnabled(bool enabled);
+    bool saveGeneralConfig(std::function<void(Config&)> modifier);
 
     std::unique_ptr<AgentClientInterface> m_ownedClient;
     AgentClientInterface* m_client = nullptr;
@@ -80,6 +99,10 @@ private:
     QString m_configPath;
     bool m_connected = false;
     bool m_autostartEnabled = false;
+    bool m_showOverlay = true;
+    QString m_defaultWindowStrategy = "cycle";
+    bool m_includeAllWorkspaces = true;
+    bool m_switchWorkspaceWhenNeeded = true;
     QVariantMap m_status;
     QVariantList m_bindings;
     QVariantList m_applications;

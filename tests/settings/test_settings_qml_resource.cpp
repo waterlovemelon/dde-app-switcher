@@ -21,18 +21,25 @@ private slots:
         QVERIFY(bindingsPageQml.size() > 0);
     }
 
+    void settingsPageQmlIsEmbedded()
+    {
+        const QResource settingsPageQml(":/qml/SettingsPage.qml");
+        QVERIFY(settingsPageQml.isValid());
+        QVERIFY(settingsPageQml.size() > 0);
+    }
+
+    void aboutPageQmlIsEmbedded()
+    {
+        const QResource aboutPageQml(":/qml/AboutPage.qml");
+        QVERIFY(aboutPageQml.isValid());
+        QVERIFY(aboutPageQml.size() > 0);
+    }
+
     void applicationPickerQmlIsEmbedded()
     {
         const QResource applicationPickerQml(":/qml/ApplicationPicker.qml");
         QVERIFY(applicationPickerQml.isValid());
         QVERIFY(applicationPickerQml.size() > 0);
-    }
-
-    void backendStatusPageQmlIsEmbedded()
-    {
-        const QResource backendStatusPageQml(":/qml/BackendStatusPage.qml");
-        QVERIFY(backendStatusPageQml.isValid());
-        QVERIFY(backendStatusPageQml.size() > 0);
     }
 
     void hotkeyRecorderQmlIsEmbedded()
@@ -56,29 +63,44 @@ private slots:
         QVERIFY(qml.contains("event.text && event.text.length === 1"));
     }
 
-    void mainQmlContainsAutostartToggle()
+    void mainQmlUsesTabBarLayout()
     {
         QFile mainQml(QFINDTESTDATA("../../src/settings/qml/Main.qml"));
         QVERIFY(mainQml.open(QIODevice::ReadOnly | QIODevice::Text));
 
         const QString qml = QString::fromUtf8(mainQml.readAll());
-        QVERIFY(qml.contains("Launch agent at login"));
-        QVERIFY(qml.contains("settingsController.autostartEnabled"));
-        QVERIFY(qml.contains("settingsController.setAutostartEnabled"));
-        QVERIFY(!qml.contains("checked = settingsController.autostartEnabled"));
+        QVERIFY(qml.contains("BindingsPage"));
+        QVERIFY(qml.contains("SettingsPage"));
+        QVERIFY(qml.contains("AboutPage"));
+        QVERIFY(qml.contains("StackLayout"));
     }
 
-    void backendStatusPageContainsWindowDiagnostics()
+    void settingsPageContainsAutostartToggle()
     {
-        QFile backendStatusPageQml(QFINDTESTDATA("../../src/settings/qml/BackendStatusPage.qml"));
-        QVERIFY(backendStatusPageQml.open(QIODevice::ReadOnly | QIODevice::Text));
+        QFile settingsPageQml(QFINDTESTDATA("../../src/settings/qml/SettingsPage.qml"));
+        QVERIFY(settingsPageQml.open(QIODevice::ReadOnly | QIODevice::Text));
 
-        const QString qml = QString::fromUtf8(backendStatusPageQml.readAll());
-        QVERIFY(qml.contains("Window Match Diagnostics"));
-        QVERIFY(qml.contains("refreshWindowDiagnostics"));
-        QVERIFY(qml.contains("match_evidence"));
-        QVERIFY(qml.contains("score_delta"));
-        QVERIFY(qml.contains("why each current window matched or did not match"));
+        const QString qml = QString::fromUtf8(settingsPageQml.readAll());
+        QVERIFY(qml.contains("controller.autostartEnabled"));
+        QVERIFY(qml.contains("controller.setAutostartEnabled"));
+        QVERIFY(qml.contains("controller.showOverlay"));
+        QVERIFY(qml.contains("controller.defaultWindowStrategy"));
+        QVERIFY(qml.contains("controller.switchWorkspaceWhenNeeded"));
+        QVERIFY(qml.contains("controller.includeAllWorkspaces"));
+    }
+
+    void aboutPageContainsDebugInfo()
+    {
+        QFile aboutPageQml(QFINDTESTDATA("../../src/settings/qml/AboutPage.qml"));
+        QVERIFY(aboutPageQml.open(QIODevice::ReadOnly | QIODevice::Text));
+
+        const QString qml = QString::fromUtf8(aboutPageQml.readAll());
+        QVERIFY(qml.contains("DeepSwitch"));
+        QVERIFY(qml.contains("capabilities"));
+        QVERIFY(qml.contains("global_hotkey"));
+        QVERIFY(qml.contains("window_list"));
+        QVERIFY(qml.contains("activate_window"));
+        QVERIFY(qml.contains("launch_app"));
     }
 };
 

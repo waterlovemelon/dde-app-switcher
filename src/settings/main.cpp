@@ -6,11 +6,26 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QProcess>
 #include <QQuickStyle>
+#include <QStandardPaths>
 #include <QTimer>
 #include <QUrl>
 
 using namespace deepswitch;
+
+namespace {
+
+bool tryStartAgent()
+{
+    const QString agentPath = QStandardPaths::findExecutable(QStringLiteral("deepswitch-agent"));
+    if (agentPath.isEmpty()) {
+        return false;
+    }
+    return QProcess::startDetached(agentPath, {});
+}
+
+} // namespace
 
 int main(int argc, char* argv[])
 {
@@ -25,6 +40,11 @@ int main(int argc, char* argv[])
 
     // Initial refresh — works if agent is already running.
     settingsController.refresh();
+
+    // If agent is not running, try to start it.
+    if (!settingsController.connected()) {
+        tryStartAgent();
+    }
 
     // Auto-refresh when the agent D-Bus service appears.
     QDBusServiceWatcher watcher(
