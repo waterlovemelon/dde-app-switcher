@@ -210,7 +210,7 @@ FocusScope {
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 36
+                Layout.preferredHeight: 34
                 radius: 8
                 color: recorder.recording ? "#fff8e8" : "#ffffff"
                 border.width: 1
@@ -228,9 +228,30 @@ FocusScope {
                 }
             }
 
-            Button {
-                text: recorder.recording ? qsTr("Listening") : qsTr("Record")
-                onClicked: recorder.beginRecording()
+            Rectangle {
+                Layout.preferredWidth: recordLabel.implicitWidth + 28
+                Layout.preferredHeight: 34
+                radius: 8
+                color: recorder.recording ? "#fff5f5" : (recordMouse.containsMouse ? "#f5f5f5" : "#ffffff")
+                border.width: 1
+                border.color: recorder.recording ? "#e57373" : (recordMouse.containsMouse ? "#00857a" : "#dddddd")
+
+                Text {
+                    id: recordLabel
+                    anchors.centerIn: parent
+                    text: recorder.recording ? qsTr("按下快捷键…") : qsTr("录制")
+                    color: recorder.recording ? "#c62828" : (recordMouse.containsMouse ? "#00857a" : "#666666")
+                    font.pixelSize: 12
+                    font.weight: Font.Medium
+                }
+
+                MouseArea {
+                    id: recordMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: recorder.beginRecording()
+                }
             }
         }
 

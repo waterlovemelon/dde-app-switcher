@@ -7,6 +7,16 @@ Item {
 
     required property var controller
 
+    // Editor data (set before opening)
+    property string editorOriginalId: ""
+    property var editorOriginalBinding: ({})
+    property string editorDesktopId: ""
+    property string editorHotkey: ""
+    property string editorStrategy: "default"
+    property bool editorLaunchIfNotRunning: true
+    property bool editorFocusExistingWindow: true
+    property string editorErrorText: ""
+
     function displayText(value, fallback) {
         if (value === undefined || value === null || String(value).trim().length === 0) {
             return fallback
@@ -20,15 +30,11 @@ Item {
 
     function appNameForDesktopId(desktopId) {
         var id = displayText(desktopId, "")
-        if (id.length === 0) {
-            return qsTr("未设置应用")
-        }
-
+        if (id.length === 0) return qsTr("未设置应用")
         for (var i = 0; i < controller.applications.length; ++i) {
             var app = controller.applications[i]
-            if (app.desktop_id === id) {
+            if (app.desktop_id === id)
                 return displayText(app.localized_name || app.name, id)
-            }
         }
         return id
     }
@@ -42,8 +48,64 @@ Item {
         return binding.enabled === undefined || binding.enabled
     }
 
+    function normalize(value) {
+        return displayText(value, "").trim()
+    }
+
+    function copyBinding(binding) {
+        var copy = {}
+        for (var key in binding) copy[key] = binding[key]
+        return copy
+    }
+
+    function generateId(desktopId) {
+        var id = normalize(desktopId)
+        if (id.toLowerCase().endsWith(".desktop"))
+            id = id.substring(0, id.length - 8)
+        id = id.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase()
+        return id
+    }
+
     function openEditor(binding) {
-        editorDialog.openForBinding(binding)
+        editorOriginalBinding = copyBinding(binding)
+        editorOriginalId = displayText(binding.id, "")
+        editorDesktopId = displayText(binding.desktop_id, "")
+        editorHotkey = displayText(binding.hotkey, "")
+        editorStrategy = strategyValue(binding)
+        editorLaunchIfNotRunning = binding.launch_if_not_running === undefined ? true : binding.launch_if_not_running
+        editorFocusExistingWindow = binding.focus_existing_window === undefined ? true : binding.focus_existing_window
+        editorErrorText = ""
+        editorLoader.active = true
+    }
+
+    function closeEditor() {
+        editorLoader.active = false
+        pickerLoader.active = false
+    }
+
+    function saveFromEditor(desktopId, hotkey, strategy, launch, focus, hotkeyField) {
+        hotkeyField.testCurrentHotkey()
+        if (hotkeyField.conflict) {
+            editorErrorText = displayText(hotkeyField.statusText, qsTr("快捷键验证失败。"))
+            return
+        }
+
+        var binding = copyBinding(editorOriginalBinding)
+        var normDesktopId = normalize(desktopId)
+        binding.id = editorOriginalId.length > 0 ? editorOriginalId : generateId(normDesktopId)
+        binding.enabled = binding.enabled === undefined ? true : binding.enabled
+        binding.hotkey = normalize(hotkey)
+        binding.desktop_id = normDesktopId
+        binding.multi_window_strategy = strategy
+        binding.launch_if_not_running = launch
+        binding.focus_existing_window = focus
+
+        if (controller.saveBinding(binding)) {
+            controller.refresh()
+            closeEditor()
+        } else {
+            editorErrorText = displayText(controller.lastError, qsTr("保存失败。"))
+        }
     }
 
     component MutedText: Text {
@@ -52,6 +114,9 @@ Item {
         elide: Text.ElideRight
     }
 
+    // ═══════════════════════════════════════
+    //  Main content
+    // ═══════════════════════════════════════
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 20
@@ -65,7 +130,6 @@ Item {
 
         ListView {
             id: bindingList
-
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
@@ -74,7 +138,6 @@ Item {
 
             delegate: Rectangle {
                 required property var modelData
-
                 width: bindingList.width
                 height: 58
                 radius: 12
@@ -95,13 +158,11 @@ Item {
                     anchors.rightMargin: 14
                     spacing: 12
 
-                    // Icon letter
                     Rectangle {
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
                         radius: 8
                         color: page.isEnabled(modelData) ? "#e0f2f1" : "#f5f5f5"
-
                         Text {
                             anchors.centerIn: parent
                             text: page.iconLetter(modelData)
@@ -111,11 +172,9 @@ Item {
                         }
                     }
 
-                    // App name + desktop id
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 2
-
                         Text {
                             Layout.fillWidth: true
                             text: page.appNameForDesktopId(modelData.desktop_id)
@@ -124,7 +183,6 @@ Item {
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
                         }
-
                         MutedText {
                             Layout.fillWidth: true
                             text: page.displayText(modelData.desktop_id, "")
@@ -132,13 +190,11 @@ Item {
                         }
                     }
 
-                    // Hotkey badge
                     Rectangle {
                         Layout.preferredWidth: hotkeyLabel.implicitWidth + 16
                         Layout.preferredHeight: 26
                         radius: 6
                         color: "#f0f0f0"
-
                         Text {
                             id: hotkeyLabel
                             anchors.centerIn: parent
@@ -150,16 +206,14 @@ Item {
                         }
                     }
 
-                    // Toggle switch
                     StyledSwitch {
                         checked: page.isEnabled(modelData)
                         onToggled: {
                             var binding = {}
                             for (var key in modelData) binding[key] = modelData[key]
                             binding.enabled = checked
-                            if (controller.saveBinding(binding)) {
+                            if (controller.saveBinding(binding))
                                 controller.refresh()
-                            }
                         }
                     }
                 }
@@ -168,13 +222,11 @@ Item {
             footer: Item {
                 width: bindingList.width
                 height: controller.bindings.length === 0 ? 160 : 60
-
                 ColumnLayout {
                     anchors.centerIn: parent
                     width: parent.width - 40
                     visible: controller.bindings.length === 0
                     spacing: 8
-
                     Text {
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
@@ -183,7 +235,6 @@ Item {
                         font.pixelSize: 16
                         font.weight: Font.DemiBold
                     }
-
                     MutedText {
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
@@ -201,14 +252,12 @@ Item {
             color: "transparent"
             border.width: 2
             border.color: addMouse.containsMouse ? "#00857a" : "#d0d0d0"
-
             Text {
                 anchors.centerIn: parent
                 text: "+ " + qsTr("添加快捷绑定")
                 color: addMouse.containsMouse ? "#00857a" : "#888888"
                 font.pixelSize: 14
             }
-
             MouseArea {
                 id: addMouse
                 anchors.fill: parent
@@ -228,7 +277,6 @@ Item {
             color: "#fbe9e7"
             border.width: 1
             border.color: "#e2b199"
-
             Text {
                 id: errorMessage
                 anchors.fill: parent
@@ -241,213 +289,345 @@ Item {
         }
     }
 
-    // ── Editor Dialog ──
-    Dialog {
-        id: editorDialog
+    // ═══════════════════════════════════════
+    //  Editor — loaded dynamically, destroyed on close
+    // ═══════════════════════════════════════
+    Loader {
+        id: editorLoader
+        active: false
+        z: 100
+        anchors.fill: parent
 
-        property string originalId: ""
-        property string errorText: ""
-        property var originalBinding: ({})
+        sourceComponent: Component {
+            Item {
+                anchors.fill: parent
 
-        function normalize(value) {
-            return page.displayText(value, "").trim()
-        }
+                // Mask
+                Rectangle {
+                    anchors.fill: parent
+                    color: "#80000000"
 
-        function copyBinding(binding) {
-            var copy = {}
-            for (var key in binding) {
-                copy[key] = binding[key]
-            }
-            return copy
-        }
-
-        function isValidId(value) {
-            return normalize(value).length > 0 && normalize(value).indexOf(" ") === -1
-        }
-
-        function isValidRequiredText(value) {
-            return normalize(value).length > 0
-        }
-
-        function canSave() {
-            return isValidId(idField.text)
-                   && isValidRequiredText(hotkeyField.text)
-                   && isValidRequiredText(desktopIdField.text)
-                   && !hotkeyField.conflict
-        }
-
-        function openForBinding(binding) {
-            originalBinding = copyBinding(binding)
-            originalId = page.displayText(binding.id, "")
-            errorText = ""
-            idField.text = originalId
-            enabledField.checked = binding.enabled === undefined ? true : binding.enabled
-            hotkeyField.text = page.displayText(binding.hotkey, "")
-            hotkeyField.excludeActionId = originalId
-            hotkeyField.statusText = ""
-            hotkeyField.conflict = false
-            desktopIdField.text = page.displayText(binding.desktop_id, "")
-            var strategy = page.strategyValue(binding)
-            strategyField.currentIndex = Math.max(0, strategyField.indexOfValue(strategy))
-            launchIfNotRunningField.checked = binding.launch_if_not_running === undefined ? true : binding.launch_if_not_running
-            focusExistingWindowField.checked = binding.focus_existing_window === undefined ? true : binding.focus_existing_window
-            open()
-        }
-
-        function selectApplication(application) {
-            desktopIdField.text = page.displayText(application.desktop_id, "")
-            appPickerDialog.close()
-        }
-
-        title: originalId.length > 0 ? qsTr("编辑绑定") : qsTr("添加绑定")
-        modal: true
-        width: Math.min(page.width - 48, 500)
-        x: Math.round((page.width - width) / 2)
-        y: Math.round((page.height - height) / 2)
-
-        contentItem: ColumnLayout {
-            spacing: 12
-
-            GridLayout {
-                Layout.fillWidth: true
-                columns: 2
-                rowSpacing: 8
-                columnSpacing: 14
-
-                Text { text: qsTr("绑定 ID"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                StyledTextField {
-                    id: idField
-                    Layout.fillWidth: true
-                    readOnly: editorDialog.originalId.length > 0
-                    placeholderText: qsTr("terminal")
-                }
-
-                Text { text: qsTr("启用"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                StyledCheckBox {
-                    id: enabledField
-                    checked: true
-                }
-
-                Text { text: qsTr("快捷键"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                HotkeyRecorder {
-                    id: hotkeyField
-                    Layout.fillWidth: true
-                    placeholderText: qsTr("Alt+Return")
-                    controller: page.controller
-                }
-
-                Text { text: qsTr("应用"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-
-                    StyledTextField {
-                        id: desktopIdField
-                        Layout.fillWidth: true
-                        placeholderText: qsTr("org.deepin.Terminal.desktop")
-                    }
-
-                    StyledButton {
-                        text: qsTr("选择")
-                        onClicked: appPickerDialog.open()
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: page.closeEditor()
                     }
                 }
 
-                Text { text: qsTr("多窗口策略"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                StyledComboBox {
-                    id: strategyField
-                    Layout.fillWidth: true
-                    textRole: "label"
-                    valueRole: "value"
-                    model: [
-                        { "label": qsTr("默认"), "value": "default" },
-                        { "label": qsTr("最近"), "value": "recent" },
-                        { "label": qsTr("循环"), "value": "cycle" },
-                        { "label": qsTr("选择器"), "value": "picker" }
-                    ]
-                }
+                // Window
+                Rectangle {
+                    id: win
+                    width: Math.min(page.width - 48, 500)
+                    height: winContent.implicitHeight
+                    radius: 14
+                    color: "#ffffff"
+                    border.width: 1
+                    border.color: "#e0e0e0"
+                    x: Math.round((page.width - width) / 2)
+                    y: Math.round((page.height - height) / 2)
+                    clip: true
 
-                Text { text: qsTr("未运行时启动"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                StyledCheckBox {
-                    id: launchIfNotRunningField
-                    checked: true
-                }
+                    ColumnLayout {
+                        id: winContent
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        spacing: 0
 
-                Text { text: qsTr("聚焦已有窗口"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                StyledCheckBox {
-                    id: focusExistingWindowField
-                    checked: true
-                }
-            }
-
-            Text {
-                Layout.fillWidth: true
-                visible: editorDialog.errorText.length > 0
-                text: editorDialog.errorText
-                color: "#c62828"
-                font.pixelSize: 13
-                wrapMode: Text.WordWrap
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 10
-
-                Item { Layout.fillWidth: true }
-
-                StyledButton {
-                    text: qsTr("取消")
-                    onClicked: editorDialog.close()
-                }
-
-                StyledButton {
-                    text: qsTr("保存")
-                    style: "primary"
-                    enabled: editorDialog.canSave()
-                    onClicked: {
-                        hotkeyField.testCurrentHotkey()
-                        if (hotkeyField.conflict) {
-                            editorDialog.errorText = page.displayText(hotkeyField.statusText, qsTr("快捷键验证失败。"))
-                            return
+                        // Title bar
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 48
+                            color: "#fafbfc"
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                width: parent.width
+                                height: 1
+                                color: "#e8e8e8"
+                            }
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 16
+                                anchors.rightMargin: 12
+                                spacing: 10
+                                Rectangle {
+                                    Layout.preferredWidth: 24
+                                    Layout.preferredHeight: 24
+                                    radius: 6
+                                    color: "#e0f2f1"
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: page.editorOriginalId.length > 0
+                                            ? page.iconLetter(page.editorOriginalBinding) : "+"
+                                        color: "#00695c"
+                                        font.pixelSize: 11
+                                        font.weight: Font.Bold
+                                    }
+                                }
+                                Text {
+                                    text: page.editorOriginalId.length > 0 ? qsTr("编辑绑定") : qsTr("添加绑定")
+                                    color: "#1a1a1a"
+                                    font.pixelSize: 14
+                                    font.weight: Font.DemiBold
+                                }
+                                Item { Layout.fillWidth: true }
+                                Rectangle {
+                                    Layout.preferredWidth: 28
+                                    Layout.preferredHeight: 28
+                                    radius: 14
+                                    color: closeBtnMouse.containsMouse ? "#fee" : "transparent"
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "✕"
+                                        color: closeBtnMouse.containsMouse ? "#c62828" : "#999"
+                                        font.pixelSize: 14
+                                    }
+                                    MouseArea {
+                                        id: closeBtnMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: page.closeEditor()
+                                    }
+                                }
+                            }
                         }
 
-                        var binding = editorDialog.copyBinding(editorDialog.originalBinding)
-                        binding.id = editorDialog.normalize(idField.text)
-                        binding.enabled = enabledField.checked
-                        binding.hotkey = editorDialog.normalize(hotkeyField.text)
-                        binding.desktop_id = editorDialog.normalize(desktopIdField.text)
-                        binding.multi_window_strategy = strategyField.currentValue
-                        binding.launch_if_not_running = launchIfNotRunningField.checked
-                        binding.focus_existing_window = focusExistingWindowField.checked
+                        // Form
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.leftMargin: 20
+                            Layout.rightMargin: 20
+                            Layout.topMargin: 16
+                            Layout.bottomMargin: 16
+                            spacing: 12
 
-                        if (controller.saveBinding(binding)) {
-                            controller.refresh()
-                            editorDialog.close()
-                        } else {
-                            editorDialog.errorText = page.displayText(controller.lastError, qsTr("保存失败。"))
+                            GridLayout {
+                                Layout.fillWidth: true
+                                columns: 2
+                                rowSpacing: 8
+                                columnSpacing: 14
+
+                                Text { text: qsTr("应用"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    StyledTextField {
+                                        id: fldDesktopId
+                                        Layout.fillWidth: true
+                                        text: page.editorDesktopId
+                                        placeholderText: qsTr("org.deepin.Terminal.desktop")
+                                    }
+                                    StyledButton {
+                                        text: qsTr("选择")
+                                        font.pixelSize: 12
+                                        onClicked: pickerLoader.active = true
+                                    }
+                                }
+
+                                Text { text: qsTr("快捷键"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                HotkeyRecorder {
+                                    id: fldHotkey
+                                    Layout.fillWidth: true
+                                    text: page.editorHotkey
+                                    placeholderText: qsTr("Alt+Return")
+                                    controller: page.controller
+                                    excludeActionId: page.editorOriginalId
+                                }
+
+                                Rectangle {
+                                    Layout.columnSpan: 2
+                                    Layout.fillWidth: true
+                                    Layout.topMargin: 4
+                                    Layout.bottomMargin: 4
+                                    height: 1
+                                    color: "#f0f0f0"
+                                }
+
+                                Text { text: qsTr("多窗口策略"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                StyledComboBox {
+                                    id: fldStrategy
+                                    Layout.fillWidth: true
+                                    textRole: "label"
+                                    valueRole: "value"
+                                    model: [
+                                        { "label": qsTr("默认"), "value": "default" },
+                                        { "label": qsTr("最近"), "value": "recent" },
+                                        { "label": qsTr("循环"), "value": "cycle" },
+                                        { "label": qsTr("选择器"), "value": "picker" }
+                                    ]
+                                    Component.onCompleted: currentIndex = Math.max(0, indexOfValue(page.editorStrategy))
+                                }
+
+                                Text { text: qsTr("未运行时"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                StyledCheckBox {
+                                    id: fldLaunch
+                                    checked: page.editorLaunchIfNotRunning
+                                    text: qsTr("自动启动应用")
+                                }
+
+                                Text { text: qsTr("已有窗口"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                StyledCheckBox {
+                                    id: fldFocus
+                                    checked: page.editorFocusExistingWindow
+                                    text: qsTr("直接聚焦已有窗口")
+                                }
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                visible: page.editorErrorText.length > 0
+                                text: page.editorErrorText
+                                color: "#c62828"
+                                font.pixelSize: 13
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+
+                        // Footer
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 52
+                            color: "#fafbfc"
+                            Rectangle {
+                                anchors.top: parent.top
+                                width: parent.width
+                                height: 1
+                                color: "#e8e8e8"
+                            }
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 16
+                                anchors.rightMargin: 16
+                                spacing: 10
+                                Item { Layout.fillWidth: true }
+                                StyledButton {
+                                    text: qsTr("取消")
+                                    onClicked: page.closeEditor()
+                                }
+                                StyledButton {
+                                    text: qsTr("保存")
+                                    style: "primary"
+                                    enabled: fldDesktopId.text.trim().length > 0
+                                              && fldHotkey.text.trim().length > 0
+                                              && !fldHotkey.conflict
+                                    onClicked: page.saveFromEditor(
+                                        fldDesktopId.text, fldHotkey.text,
+                                        fldStrategy.currentValue,
+                                        fldLaunch.checked, fldFocus.checked,
+                                        fldHotkey
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-            }
-        }
-    }
 
-    Dialog {
-        id: appPickerDialog
+                // App picker (loaded on top)
+                Loader {
+                    id: pickerLoader
+                    active: false
+                    anchors.fill: parent
+                    z: 1
 
-        title: qsTr("选择应用")
-        modal: true
-        width: Math.min(page.width - 48, 640)
-        height: Math.min(page.height - 48, 480)
-        x: Math.round((page.width - width) / 2)
-        y: Math.round((page.height - height) / 2)
+                    sourceComponent: Component {
+                        Item {
+                            anchors.fill: parent
 
-        contentItem: ApplicationPicker {
-            applications: controller.applications
-            selectedDesktopId: desktopIdField.text
-            selectable: true
-            onApplicationSelected: function(application) {
-                editorDialog.selectApplication(application)
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#80000000"
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: pickerLoader.active = false
+                                }
+                            }
+
+                            Rectangle {
+                                width: Math.min(page.width - 48, 640)
+                                height: Math.min(page.height - 48, 480)
+                                radius: 14
+                                color: "#ffffff"
+                                border.width: 1
+                                border.color: "#e0e0e0"
+                                x: Math.round((page.width - width) / 2)
+                                y: Math.round((page.height - height) / 2)
+                                clip: true
+
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    spacing: 0
+
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 48
+                                        color: "#fafbfc"
+                                        Rectangle {
+                                            anchors.bottom: parent.bottom
+                                            width: parent.width
+                                            height: 1
+                                            color: "#e8e8e8"
+                                        }
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 16
+                                            anchors.rightMargin: 12
+                                            spacing: 10
+                                            Rectangle {
+                                                Layout.preferredWidth: 24
+                                                Layout.preferredHeight: 24
+                                                radius: 6
+                                                color: "#e0f2f1"
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "📱"
+                                                    font.pixelSize: 12
+                                                }
+                                            }
+                                            Text {
+                                                text: qsTr("选择应用")
+                                                color: "#1a1a1a"
+                                                font.pixelSize: 14
+                                                font.weight: Font.DemiBold
+                                            }
+                                            Item { Layout.fillWidth: true }
+                                            Rectangle {
+                                                Layout.preferredWidth: 28
+                                                Layout.preferredHeight: 28
+                                                radius: 14
+                                                color: pCloseMouse.containsMouse ? "#fee" : "transparent"
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "✕"
+                                                    color: pCloseMouse.containsMouse ? "#c62828" : "#999"
+                                                    font.pixelSize: 14
+                                                }
+                                                MouseArea {
+                                                    id: pCloseMouse
+                                                    anchors.fill: parent
+                                                    hoverEnabled: true
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onClicked: pickerLoader.active = false
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    ApplicationPicker {
+                                        Layout.fillWidth: true
+                                        Layout.fillHeight: true
+                                        Layout.margins: 12
+                                        applications: controller.applications
+                                        selectedDesktopId: fldDesktopId.text
+                                        selectable: true
+                                        onApplicationSelected: function(application) {
+                                            fldDesktopId.text = page.displayText(application.desktop_id, "")
+                                            pickerLoader.active = false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

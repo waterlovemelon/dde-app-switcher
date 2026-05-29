@@ -11,7 +11,7 @@ Button {
         color: {
             if (control.style === "primary") return "#ffffff"
             if (control.style === "ghost") return control.hovered ? "#00857a" : "#888888"
-            return control.hovered ? "#00857a" : "#333333"
+            return control.hovered ? "#00857a" : "#666666"
         }
         font.pixelSize: 13
         font.weight: Font.Medium
@@ -21,7 +21,7 @@ Button {
 
     background: Rectangle {
         implicitWidth: 72
-        implicitHeight: 32
+        implicitHeight: 34
         radius: 8
 
         color: {
@@ -30,7 +30,7 @@ Button {
             return control.hovered ? "#f5f5f5" : "#ffffff"
         }
 
-        border.width: control.style === "ghost" ? 1 : 1
+        border.width: 1
         border.color: {
             if (control.style === "primary") return control.hovered ? "#00695c" : "#00857a"
             if (control.style === "ghost") return control.hovered ? "#00857a" : "#d0d0d0"
