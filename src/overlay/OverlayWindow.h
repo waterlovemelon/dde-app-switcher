@@ -1,17 +1,23 @@
 #pragma once
 
-#include <QQuickView>
+#include <QObject>
 #include <QString>
+#include <QVariantList>
+#include <QQuickWindow>
 
 namespace deepswitch {
 
-class OverlayWindow : public QQuickView {
+class OverlayWindow : public QObject {
     Q_OBJECT
 
 public:
-    explicit OverlayWindow(QString kind, QString message, QWindow* parent = nullptr);
+    explicit OverlayWindow(QVariantList apps, QObject* parent = nullptr);
+    explicit OverlayWindow(QString kind, QString message, QObject* parent = nullptr);
 
     void showHint();
+
+private:
+    QQuickWindow* m_window = nullptr;
 };
 
 }

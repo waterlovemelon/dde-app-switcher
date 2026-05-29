@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <optional>
+#include <QRegularExpression>
 #include <QSet>
 #include <QVariant>
 
@@ -338,6 +339,56 @@ Result<QList<AppInfo>> AgentController::listApplications()
 
     m_applications = registry.listApplications();
     return Result<QList<AppInfo>>::success(m_applications);
+}
+
+QVariantList AgentController::resolveOverlayApps()
+{
+    if (m_applications.isEmpty()) {
+        listApplications();
+    }
+
+    QVariantList result;
+    static const QRegularExpression hotkeyNumRe(QStringLiteral("\\+(\\d+)$"));
+
+    for (const Binding& binding : m_config.bindings) {
+        if (!binding.enabled) {
+            continue;
+        }
+
+        QString icon;
+        QString name;
+
+        for (const AppInfo& app : m_applications) {
+            if (app.desktopId == binding.desktopId) {
+                icon = app.icon;
+                name = app.localizedName.isEmpty() ? app.name : app.localizedName;
+                break;
+            }
+        }
+
+        if (icon.isEmpty()) {
+            icon = QStringLiteral("application-x-executable");
+        }
+        if (name.isEmpty()) {
+            name = binding.desktopId;
+        }
+
+        QString hotkeyNum;
+        const auto match = hotkeyNumRe.match(binding.hotkey);
+        if (match.hasMatch()) {
+            hotkeyNum = match.captured(1);
+        }
+
+        QVariantMap entry;
+        entry[QStringLiteral("icon")] = icon;
+        entry[QStringLiteral("name")] = name;
+        entry[QStringLiteral("hotkey")] = hotkeyNum;
+        entry[QStringLiteral("running")] = false;
+        entry[QStringLiteral("active")] = false;
+        result.append(entry);
+    }
+
+    return result;
 }
 
 Result<QList<WindowInfo>> AgentController::listWindows(const QString& filter) const

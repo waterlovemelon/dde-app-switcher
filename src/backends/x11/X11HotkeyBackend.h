@@ -7,6 +7,12 @@
 
 namespace deepswitch {
 
+enum class SuperKeyEvent {
+    NoEvent,
+    Pressed,
+    Released
+};
+
 class X11HotkeyBackend {
 public:
     explicit X11HotkeyBackend(X11Connection& connection);
@@ -15,6 +21,12 @@ public:
     void unregisterHotkey(const Hotkey& hotkey);
     void unregisterAll();
     QString pollTriggeredAction();
+    VoidResult registerSuperKey();
+    SuperKeyEvent pollSuperKey();
+
+    // Unified event poll: handles both Super key and regular hotkeys.
+    // Returns triggered hotkey action (empty if none). Sets superEvent.
+    QString pollAllEvents(SuperKeyEvent& superEvent);
 
 private:
     unsigned int modifierMask(const QStringList& modifiers) const;

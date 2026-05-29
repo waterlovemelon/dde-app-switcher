@@ -14,9 +14,9 @@ private slots:
         const QString source = QString::fromUtf8(mainCpp.readAll());
         QVERIFY(source.contains("QProcess::startDetached"));
         QVERIFY(source.contains("showOverlay"));
-        QVERIFY(source.contains("triggered.ok"));
-        QVERIFY(source.contains("launchOverlayHint"));
-        QVERIFY(source.contains("failed"));
+        QVERIFY(source.contains("launchOverlayBar"));
+        QVERIFY(source.contains("resolveOverlayApps"));
+        QVERIFY(source.contains("--apps"));
     }
 };
 

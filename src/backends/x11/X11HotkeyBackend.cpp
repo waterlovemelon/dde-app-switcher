@@ -1,6 +1,11 @@
 #include "backends/x11/X11HotkeyBackend.h"
 
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/XInput2.h>
 #include <X11/keysym.h>
+#include <cstring>
+#include <cstdlib>
 
 namespace deepswitch {
 namespace {
@@ -153,6 +158,73 @@ QString X11HotkeyBackend::pollTriggeredAction()
             return m_keyToAction.value(key);
         }
     }
+    return {};
+}
+
+VoidResult X11HotkeyBackend::registerSuperKey()
+{
+    Display* dpy = m_connection.display();
+    const KeyCode superCode = XKeysymToKeycode(dpy, XK_Super_L);
+    if (superCode == 0) {
+        return VoidResult::failure("super_key_invalid", "Cannot map Super_L to keycode.");
+    }
+
+    // Use XInput2 passive monitoring — observe without intercepting
+    XIEventMask mask;
+    mask.deviceid = XIAllDevices;
+    mask.mask_len = XIMaskLen(XI_LASTEVENT);
+    mask.mask = static_cast<unsigned char*>(calloc(mask.mask_len, 1));
+
+    XISetMask(mask.mask, XI_KeyPress);
+    XISetMask(mask.mask, XI_KeyRelease);
+
+    XISelectEvents(dpy, m_connection.rootWindow(), &mask, 1);
+    XFlush(dpy);
+    free(mask.mask);
+
+    return VoidResult::success();
+}
+
+
+QString X11HotkeyBackend::pollAllEvents(SuperKeyEvent& superEvent)
+{
+    superEvent = SuperKeyEvent::NoEvent;
+    Display* dpy = m_connection.display();
+    const KeyCode superCode = XKeysymToKeycode(dpy, XK_Super_L);
+
+    while (XPending(dpy) > 0) {
+        XEvent event;
+        XNextEvent(dpy, &event);
+
+        // Handle XInput2 key events (passive monitoring)
+        if (event.type == GenericEvent) {
+            XGenericEventCookie* cookie = &event.xcookie;
+            if (XGetEventData(dpy, cookie)) {
+                if (cookie->evtype == XI_KeyPress || cookie->evtype == XI_KeyRelease) {
+                    auto* xie = static_cast<XIDeviceEvent*>(cookie->data);
+                    if (xie->detail == superCode) {
+                        superEvent = (cookie->evtype == XI_KeyPress)
+                            ? SuperKeyEvent::Pressed
+                            : SuperKeyEvent::Released;
+                    }
+                }
+                XFreeEventData(dpy, cookie);
+            }
+            continue;
+        }
+
+        // Handle regular X11 hotkey events
+        if (event.type == KeyPress) {
+            const unsigned int cleanState = event.xkey.state & ~(Mod2Mask | LockMask | Mod5Mask);
+            const QString key = QString("%1:%2").arg(event.xkey.keycode).arg(cleanState);
+            if (m_keyToAction.contains(key)) {
+                XFlush(dpy);
+                return m_keyToAction.value(key);
+            }
+        }
+    }
+
+    XFlush(dpy);
     return {};
 }
 

@@ -1,36 +1,74 @@
 #include "overlay/OverlayWindow.h"
+#include "overlay/IconProvider.h"
 
 #include <QQmlContext>
+#include <QQmlEngine>
+#include <QQuickView>
 #include <QScreen>
 #include <QUrl>
 #include <utility>
 
 namespace deepswitch {
 
-OverlayWindow::OverlayWindow(QString kind, QString message, QWindow* parent)
-    : QQuickView(parent)
-{
-    setFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::BypassWindowManagerHint);
-    setColor(Qt::transparent);
-    setResizeMode(QQuickView::SizeRootObjectToView);
-    setWidth(360);
-    setHeight(84);
+static constexpr int kSlotWidth = 108;
+static constexpr int kPaddingH = 40;
+static constexpr int kBarHeight = 120;
 
-    rootContext()->setContextProperty(QStringLiteral("overlayKind"), std::move(kind));
-    rootContext()->setContextProperty(QStringLiteral("overlayMessage"), std::move(message));
-    setSource(QUrl(QStringLiteral("qrc:/overlay/qml/Overlay.qml")));
+OverlayWindow::OverlayWindow(QVariantList apps, QObject* parent)
+    : QObject(parent)
+{
+    auto* view = new QQuickView;
+    m_window = view;
+
+    view->setFlags(Qt::Dialog | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus);
+    view->setColor(Qt::transparent);
+    view->setResizeMode(QQuickView::SizeRootObjectToView);
+
+    const int count = apps.size();
+    const int barWidth = kPaddingH + count * kSlotWidth;
+    const int w = barWidth > kPaddingH ? barWidth : 200;
+
+    view->engine()->addImageProvider(QStringLiteral("theme"), new IconProvider);
+    view->rootContext()->setContextProperty(QStringLiteral("overlayMode"), QStringLiteral("appbar"));
+    view->rootContext()->setContextProperty(QStringLiteral("appEntries"), apps);
+    view->rootContext()->setContextProperty(QStringLiteral("overlayKind"), QString());
+    view->rootContext()->setContextProperty(QStringLiteral("overlayMessage"), QString());
+    view->setSource(QUrl(QStringLiteral("qrc:/overlay/qml/Overlay.qml")));
+
+    view->setGeometry(0, 0, w, kBarHeight);
+}
+
+OverlayWindow::OverlayWindow(QString kind, QString message, QObject* parent)
+    : QObject(parent)
+{
+    auto* view = new QQuickView;
+    m_window = view;
+
+    view->setFlags(Qt::Dialog | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus);
+    view->setColor(Qt::transparent);
+    view->setResizeMode(QQuickView::SizeRootObjectToView);
+
+    view->rootContext()->setContextProperty(QStringLiteral("overlayMode"), QStringLiteral("toast"));
+    view->rootContext()->setContextProperty(QStringLiteral("appEntries"), QVariantList());
+    view->rootContext()->setContextProperty(QStringLiteral("overlayKind"), std::move(kind));
+    view->rootContext()->setContextProperty(QStringLiteral("overlayMessage"), std::move(message));
+    view->setSource(QUrl(QStringLiteral("qrc:/overlay/qml/Overlay.qml")));
+
+    view->setGeometry(0, 0, 360, 84);
 }
 
 void OverlayWindow::showHint()
 {
-    if (QScreen* currentScreen = screen()) {
+    if (!m_window) return;
+
+    if (QScreen* currentScreen = m_window->screen()) {
         const QRect geometry = currentScreen->availableGeometry();
-        setPosition(
-            geometry.x() + (geometry.width() - width()) / 2,
-            geometry.y() + 72);
+        const int x = geometry.x() + (geometry.width() - m_window->width()) / 2;
+        const int y = geometry.y() + (geometry.height() - m_window->height()) / 2;
+        m_window->setPosition(x, y);
     }
-    show();
-    raise();
+    m_window->show();
+    m_window->raise();
 }
 
 }

@@ -4,6 +4,9 @@
 #include <QDBusError>
 #include <QDir>
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QProcess>
 #include <QTextStream>
 #include <QTimer>
@@ -25,26 +28,7 @@ using namespace deepswitch;
 
 namespace {
 
-QString overlayKindForResult(const Result<QString>& triggered)
-{
-    if (!triggered.ok) {
-        return QStringLiteral("failed");
-    }
-
-    const QString message = triggered.value.toLower();
-    if (message.startsWith(QStringLiteral("launched"))) {
-        return QStringLiteral("launched");
-    }
-    if (message.startsWith(QStringLiteral("cycled"))) {
-        return QStringLiteral("cycled");
-    }
-    if (message.startsWith(QStringLiteral("focused"))) {
-        return QStringLiteral("focused");
-    }
-    return QStringLiteral("focused");
-}
-
-bool launchOverlayHint(const Result<QString>& triggered)
+bool launchOverlayBar(AgentController& controller, const QString& activeActionId)
 {
     const QString executable = QCoreApplication::applicationDirPath() + QDir::separator() + QStringLiteral("deepswitch-overlay");
     const QFileInfo overlayInfo(executable);
@@ -52,12 +36,32 @@ bool launchOverlayHint(const Result<QString>& triggered)
         return false;
     }
 
-    const QString message = triggered.ok ? triggered.value : triggered.message;
+    QVariantList apps = controller.resolveOverlayApps();
+    for (auto& entry : apps) {
+        QVariantMap map = entry.toMap();
+        if (map.value(QStringLiteral("id")).toString() == activeActionId) {
+            map[QStringLiteral("active")] = true;
+            entry = map;
+        }
+    }
+
+    QJsonArray arr;
+    for (const auto& entry : apps) {
+        const QVariantMap map = entry.toMap();
+        QJsonObject obj;
+        obj[QStringLiteral("icon")] = map.value(QStringLiteral("icon")).toString();
+        obj[QStringLiteral("name")] = map.value(QStringLiteral("name")).toString();
+        obj[QStringLiteral("hotkey")] = map.value(QStringLiteral("hotkey")).toString();
+        obj[QStringLiteral("running")] = map.value(QStringLiteral("running")).toBool();
+        obj[QStringLiteral("active")] = map.value(QStringLiteral("active")).toBool();
+        arr.append(obj);
+    }
+
+    const QString json = QString::fromUtf8(QJsonDocument(arr).toJson(QJsonDocument::Compact));
+
     return QProcess::startDetached(executable, {
-        QStringLiteral("--kind"),
-        overlayKindForResult(triggered),
-        QStringLiteral("--message"),
-        message,
+        QStringLiteral("--apps"),
+        json,
     });
 }
 
@@ -231,17 +235,60 @@ int main(int argc, char *argv[])
         return 2;
     }
 
+    // Register Super key for overlay show/hide
+    const auto superRegistered = hotkeys.registerSuperKey();
+    if (superRegistered.ok) {
+        writeOut(QStringLiteral("registered Super_L for overlay"));
+    } else {
+        writeErr(superRegistered.errorCode + QStringLiteral(": ") + superRegistered.message);
+    }
+
     writeOut(QStringLiteral("listening for hotkeys; press Ctrl+C to exit"));
     out.flush();
 
+    // Track overlay process for kill-on-release
+    QProcess* overlayProcess = nullptr;
+
     QTimer pollTimer;
     QObject::connect(&pollTimer, &QTimer::timeout, [&]() {
-        const QString action = hotkeys.pollTriggeredAction();
+        SuperKeyEvent superEvent = SuperKeyEvent::NoEvent;
+        const QString action = hotkeys.pollAllEvents(superEvent);
+
+        // Handle Super key press/release for overlay
+        if (superEvent == SuperKeyEvent::Pressed && controller.showOverlay()) {
+            if (overlayProcess) {
+                overlayProcess->kill();
+                overlayProcess->deleteLater();
+                overlayProcess = nullptr;
+            }
+            overlayProcess = new QProcess;
+            const QString executable = QCoreApplication::applicationDirPath()
+                + QDir::separator() + QStringLiteral("deepswitch-overlay");
+            QVariantList apps = controller.resolveOverlayApps();
+            QJsonArray arr;
+            for (const auto& entry : apps) {
+                const QVariantMap map = entry.toMap();
+                QJsonObject obj;
+                obj[QStringLiteral("icon")] = map.value(QStringLiteral("icon")).toString();
+                obj[QStringLiteral("name")] = map.value(QStringLiteral("name")).toString();
+                obj[QStringLiteral("hotkey")] = map.value(QStringLiteral("hotkey")).toString();
+                obj[QStringLiteral("running")] = map.value(QStringLiteral("running")).toBool();
+                obj[QStringLiteral("active")] = map.value(QStringLiteral("active")).toBool();
+                arr.append(obj);
+            }
+            const QString json = QString::fromUtf8(QJsonDocument(arr).toJson(QJsonDocument::Compact));
+            overlayProcess->start(executable, { QStringLiteral("--apps"), json });
+        } else if (superEvent == SuperKeyEvent::Released) {
+            if (overlayProcess) {
+                overlayProcess->kill();
+                overlayProcess->deleteLater();
+                overlayProcess = nullptr;
+            }
+        }
+
+        // Handle regular hotkey actions
         if (!action.isEmpty()) {
             const auto triggered = controller.triggerHotkeyAction(action);
-            if (controller.showOverlay()) {
-                launchOverlayHint(triggered);
-            }
             if (triggered.ok) {
                 writeOut(triggered.value);
                 emit dbusService.HotkeyTriggered(action, {

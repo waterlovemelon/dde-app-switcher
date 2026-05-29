@@ -53,6 +53,7 @@ target_link_libraries(deepswitch_x11 PUBLIC
     Qt6::Core
     Qt6::Gui
     X11::X11
+    Xi
 )
 
 add_library(deepswitch_ipc STATIC
@@ -129,6 +130,8 @@ install(DIRECTORY docs/superpowers/plans
 if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
     add_executable(deepswitch-overlay
         src/overlay/main.cpp
+        src/overlay/IconProvider.cpp
+        src/overlay/IconProvider.h
         src/overlay/OverlayWindow.cpp
         src/overlay/OverlayWindow.h
         src/overlay/qml/qml.qrc

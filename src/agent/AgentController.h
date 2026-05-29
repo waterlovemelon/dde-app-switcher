@@ -64,6 +64,7 @@ public:
     Result<QString> triggerHotkeyAction(const QString& actionId);
     QList<Binding> listBindings() const;
     Result<QList<AppInfo>> listApplications();
+    QVariantList resolveOverlayApps();
     Result<QList<WindowInfo>> listWindows(const QString& filter = QString()) const;
     VoidResult testHotkey(const QString& hotkey, const QString& excludeActionId = QString()) const;
     AgentControllerStatus status() const;

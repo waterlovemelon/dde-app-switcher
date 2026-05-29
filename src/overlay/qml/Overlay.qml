@@ -2,42 +2,138 @@ import QtQuick
 
 Rectangle {
     id: root
-    width: 360
-    height: 84
-    radius: 22
-    color: "#e6202428"
-    border.color: "#33ffffff"
+    radius: overlayMode === "appbar" ? 16 : 22
+    color: overlayMode === "appbar" ? "#e6202428" : "#e6202428"
+    border.color: overlayMode === "appbar" ? Qt.rgba(1, 1, 1, 0.15) : "#33ffffff"
     border.width: 1
 
-    readonly property color accentColor: {
-        if (overlayKind === "failed")
-            return "#ff6464"
-        if (overlayKind === "launched")
-            return "#79d890"
-        if (overlayKind === "cycled")
-            return "#8cc8ff"
+    // ── App Bar Mode ──────────────────────────────────────────────
+    Row {
+        id: barRow
+        visible: overlayMode === "appbar"
+        anchors.centerIn: parent
+        spacing: 4
+
+        Repeater {
+            model: overlayMode === "appbar" ? appEntries : []
+
+            delegate: Item {
+                width: 104
+                height: 104
+
+                property bool isActive: modelData.active || false
+                property bool isRunning: modelData.running || false
+                property string appIcon: modelData.icon || ""
+                property string appHotkey: modelData.hotkey || ""
+
+                Rectangle {
+                    id: slotBg
+                    anchors.fill: parent
+                    radius: 16
+                    color: isActive ? Qt.rgba(1, 1, 1, 0.14) : "transparent"
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                }
+
+                Rectangle {
+                    anchors.fill: iconBox
+                    radius: iconBox.radius
+                    color: "transparent"
+                    border.width: 2
+                    border.color: isRunning ? Qt.rgba(0, 0.506, 1, 0.35) : "transparent"
+                    visible: isRunning
+                }
+
+                Rectangle {
+                    id: iconBox
+                    width: 80
+                    height: 80
+                    radius: 20
+                    anchors.centerIn: parent
+                    color: Qt.rgba(0, 0, 0, 0.3)
+
+                    Image {
+                        anchors.centerIn: parent
+                        width: 56
+                        height: 56
+                        source: "image://theme/" + appIcon
+                        sourceSize: Qt.size(56, 56)
+                        smooth: true
+                    }
+                }
+
+                Rectangle {
+                    width: Math.max(22, badgeText.implicitWidth + 10)
+                    height: 22
+                    radius: 11
+                    anchors.top: iconBox.top
+                    anchors.right: iconBox.right
+                    anchors.topMargin: -5
+                    anchors.rightMargin: -5
+                    color: "#0081ff"
+
+                    Text {
+                        id: badgeText
+                        anchors.centerIn: parent
+                        text: appHotkey
+                        color: "#ffffff"
+                        font.pixelSize: 12
+                        font.weight: Font.Bold
+                    }
+                }
+
+                Rectangle {
+                    width: 22
+                    height: 4
+                    radius: 2
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 4
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: Qt.rgba(1, 1, 1, 0.6)
+                    visible: isActive
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onEntered: { slotBg.color = Qt.rgba(1,1,1,0.1); parent.scale = 1.06; }
+                    onExited: { slotBg.color = isActive ? Qt.rgba(1,1,1,0.14) : "transparent"; parent.scale = 1.0; }
+                    onPressed: parent.scale = 0.94;
+                    onReleased: parent.scale = containsMouse ? 1.06 : 1.0;
+                }
+
+                Behavior on scale {
+                    NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.5 }
+                }
+            }
+        }
+    }
+
+    // ── Toast Mode (legacy) ──────────────────────────────────────
+    readonly property color toastAccent: {
+        if (overlayKind === "failed") return "#ff6464"
+        if (overlayKind === "launched") return "#79d890"
+        if (overlayKind === "cycled") return "#8cc8ff"
         return "#ffd166"
     }
 
     Rectangle {
         id: glyph
+        visible: overlayMode === "toast"
         width: 42
         height: 42
         radius: 21
         anchors.left: parent.left
         anchors.leftMargin: 18
         anchors.verticalCenter: parent.verticalCenter
-        color: root.accentColor
+        color: toastAccent
 
         Text {
             anchors.centerIn: parent
             text: {
-                if (overlayKind === "failed")
-                    return "!"
-                if (overlayKind === "launched")
-                    return "+"
-                if (overlayKind === "cycled")
-                    return ">"
+                if (overlayKind === "failed") return "!"
+                if (overlayKind === "launched") return "+"
+                if (overlayKind === "cycled") return ">"
                 return "*"
             }
             color: "#202428"
@@ -47,6 +143,7 @@ Rectangle {
     }
 
     Column {
+        visible: overlayMode === "toast"
         anchors.left: glyph.right
         anchors.leftMargin: 16
         anchors.right: parent.right
@@ -74,11 +171,12 @@ Rectangle {
     }
 
     opacity: 0
+    Component.onCompleted: fadeIn.start()
 
-    SequentialAnimation on opacity {
-        running: true
-        NumberAnimation { to: 1; duration: 90; easing.type: Easing.OutCubic }
-        PauseAnimation { duration: 630 }
-        NumberAnimation { to: 0; duration: 120; easing.type: Easing.InCubic }
+    NumberAnimation on opacity {
+        id: fadeIn
+        to: 1.0
+        duration: overlayMode === "appbar" ? 300 : 90
+        easing.type: Easing.OutCubic
     }
 }
