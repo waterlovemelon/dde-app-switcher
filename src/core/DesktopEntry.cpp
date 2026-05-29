@@ -2,6 +2,8 @@
 
 #include <QFile>
 #include <QFileInfo>
+#include <QLocale>
+#include <QMap>
 #include <QTextStream>
 
 namespace deepswitch {
@@ -34,6 +36,7 @@ Result<AppInfo> DesktopEntry::fromFile(const QString& path)
 
     bool inDesktopEntry = false;
     bool hasType = false;
+    QMap<QString, QString> localizedNames; // e.g. "zh_CN" -> "终端"
     QTextStream stream(&file);
     while (!stream.atEnd()) {
         const QString line = stream.readLine().trimmed();
@@ -67,8 +70,8 @@ Result<AppInfo> DesktopEntry::fromFile(const QString& path)
         }
         if (key == "Name") {
             app.name = value;
-        } else if (key == "Name[zh_CN]") {
-            app.localizedName = value;
+        } else if (key.startsWith("Name[") && key.endsWith(']')) {
+            localizedNames.insert(key.mid(5, key.length() - 6), value);
         } else if (key == "Exec") {
             app.exec = cleanExec(value);
         } else if (key == "Icon") {
@@ -91,6 +94,29 @@ Result<AppInfo> DesktopEntry::fromFile(const QString& path)
     }
     if (app.name.isEmpty() || app.exec.isEmpty()) {
         return Result<AppInfo>::failure("desktop_file_invalid", "Desktop entry is missing Name or Exec.");
+    }
+    // Pick localized name based on system locale, fallback to English (Name)
+    if (!localizedNames.isEmpty()) {
+        const QString sysLocale = QLocale::system().name(); // e.g. "zh_CN"
+        if (localizedNames.contains(sysLocale)) {
+            app.localizedName = localizedNames.value(sysLocale);
+        } else {
+            // Try language-only match (e.g. "zh" for "zh_CN")
+            QString lang = sysLocale.left(sysLocale.indexOf('_'));
+            if (lang.isEmpty()) lang = sysLocale;
+            auto it = localizedNames.find(lang);
+            if (it == localizedNames.end()) {
+                for (auto i = localizedNames.begin(); i != localizedNames.end(); ++i) {
+                    if (i.key().startsWith(lang)) {
+                        it = i;
+                        break;
+                    }
+                }
+            }
+            if (it != localizedNames.end()) {
+                app.localizedName = it.value();
+            }
+        }
     }
     if (app.localizedName.isEmpty()) {
         app.localizedName = app.name;

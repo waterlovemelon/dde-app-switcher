@@ -6,7 +6,9 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLocale>
 #include <QTimer>
+#include <QTranslator>
 
 using namespace deepswitch;
 
@@ -44,6 +46,11 @@ int main(int argc, char* argv[])
     QGuiApplication app(argc, argv);
     QGuiApplication::setApplicationName(QStringLiteral("deepswitch-overlay"));
     QGuiApplication::setApplicationVersion(QStringLiteral("0.2.0"));
+
+    QTranslator translator;
+    if (translator.load(QLocale::system(), "deepswitch", "_", ":/i18n")) {
+        QGuiApplication::installTranslator(&translator);
+    }
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("DeepSwitch overlay"));

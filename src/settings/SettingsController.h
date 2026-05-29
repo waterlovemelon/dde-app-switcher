@@ -29,6 +29,7 @@ class SettingsController : public QObject {
     Q_PROPERTY(QString defaultWindowStrategy READ defaultWindowStrategy NOTIFY defaultWindowStrategyChanged)
     Q_PROPERTY(bool includeAllWorkspaces READ includeAllWorkspaces NOTIFY includeAllWorkspacesChanged)
     Q_PROPERTY(bool switchWorkspaceWhenNeeded READ switchWorkspaceWhenNeeded NOTIFY switchWorkspaceWhenNeededChanged)
+    Q_PROPERTY(QString language READ language NOTIFY languageChanged)
 
 public:
     explicit SettingsController(QObject* parent = nullptr);
@@ -49,6 +50,7 @@ public:
     QString defaultWindowStrategy() const;
     bool includeAllWorkspaces() const;
     bool switchWorkspaceWhenNeeded() const;
+    QString language() const;
 
     Q_INVOKABLE void refresh();
     Q_INVOKABLE bool saveBinding(const QVariantMap& binding);
@@ -61,6 +63,7 @@ public:
     Q_INVOKABLE bool setDefaultWindowStrategy(const QString& strategy);
     Q_INVOKABLE bool setIncludeAllWorkspaces(bool enabled);
     Q_INVOKABLE bool setSwitchWorkspaceWhenNeeded(bool enabled);
+    Q_INVOKABLE bool setLanguage(const QString& language);
 
 signals:
     void connectedChanged();
@@ -76,6 +79,7 @@ signals:
     void defaultWindowStrategyChanged();
     void includeAllWorkspacesChanged();
     void switchWorkspaceWhenNeededChanged();
+    void languageChanged();
 
 private:
     bool ensureAvailable();
@@ -103,6 +107,7 @@ private:
     QString m_defaultWindowStrategy = "cycle";
     bool m_includeAllWorkspaces = true;
     bool m_switchWorkspaceWhenNeeded = true;
+    QString m_language = "system";
     QVariantMap m_status;
     QVariantList m_bindings;
     QVariantList m_applications;

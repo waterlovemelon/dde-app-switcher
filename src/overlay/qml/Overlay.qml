@@ -117,6 +117,13 @@ Rectangle {
         return "#ffd166"
     }
 
+    function kindLabel(kind) {
+        if (kind === "failed") return qsTr("Failed")
+        if (kind === "launched") return qsTr("Launched")
+        if (kind === "cycled") return qsTr("Cycled")
+        return qsTr("Focused")
+    }
+
     Rectangle {
         id: glyph
         visible: overlayMode === "toast"
@@ -153,7 +160,7 @@ Rectangle {
 
         Text {
             width: parent.width
-            text: overlayKind.charAt(0).toUpperCase() + overlayKind.slice(1)
+            text: kindLabel(overlayKind)
             color: "#ffffff"
             font.pixelSize: 17
             font.bold: true

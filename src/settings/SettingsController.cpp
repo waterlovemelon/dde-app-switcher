@@ -34,6 +34,15 @@ Config loadConfigOrDefaults(const QString& configPath)
     return Config::defaults();
 }
 
+QString configuredLanguage(const QString& configPath)
+{
+    const auto loaded = ConfigManager(configPath).load();
+    if (loaded.ok) {
+        return loaded.value.general.language;
+    }
+    return "system";
+}
+
 }
 
 SettingsController::SettingsController(QObject* parent)
@@ -42,6 +51,7 @@ SettingsController::SettingsController(QObject* parent)
     , m_client(m_ownedClient.get())
     , m_configPath(ConfigManager::defaultConfigPath())
     , m_autostartEnabled(configuredAutostartEnabled(m_configPath, m_autostartManager))
+    , m_language(configuredLanguage(m_configPath))
 {
     const auto config = loadConfigOrDefaults(m_configPath);
     m_showOverlay = config.general.showOverlay;
@@ -60,6 +70,7 @@ SettingsController::SettingsController(AgentClientInterface& client, QString con
     , m_client(&client)
     , m_configPath(std::move(configPath))
     , m_autostartEnabled(configuredAutostartEnabled(m_configPath, m_autostartManager))
+    , m_language(configuredLanguage(m_configPath))
 {
     const auto config = loadConfigOrDefaults(m_configPath);
     m_showOverlay = config.general.showOverlay;
@@ -133,6 +144,11 @@ bool SettingsController::includeAllWorkspaces() const
 bool SettingsController::switchWorkspaceWhenNeeded() const
 {
     return m_switchWorkspaceWhenNeeded;
+}
+
+QString SettingsController::language() const
+{
+    return m_language;
 }
 
 void SettingsController::refresh()
@@ -292,6 +308,32 @@ bool SettingsController::setSwitchWorkspaceWhenNeeded(bool enabled)
     });
 }
 
+bool SettingsController::setLanguage(const QString& language)
+{
+    ConfigManager configManager(m_configPath);
+    auto loaded = configManager.load();
+    if (!loaded.ok) {
+        setLastErrorResult(AgentCallResult::failure(loaded.errorCode, loaded.message));
+        return false;
+    }
+
+    Config config = loaded.value;
+    config.general.language = language;
+    const auto saved = configManager.save(config);
+    if (!saved.ok) {
+        setLastErrorResult(AgentCallResult::failure(saved.errorCode, saved.message));
+        return false;
+    }
+
+    if (m_language != language) {
+        m_language = language;
+        emit languageChanged();
+    }
+    setLastError(QString());
+    setLastErrorCode(QString());
+    return true;
+}
+
 bool SettingsController::saveGeneralConfig(std::function<void(Config&)> modifier)
 {
     ConfigManager configManager(m_configPath);
@@ -303,7 +345,6 @@ bool SettingsController::saveGeneralConfig(std::function<void(Config&)> modifier
 
     Config config = loaded.value;
     modifier(config);
-
     const auto saved = configManager.save(config);
     if (!saved.ok) {
         setLastErrorResult(AgentCallResult::failure(saved.errorCode, saved.message));
