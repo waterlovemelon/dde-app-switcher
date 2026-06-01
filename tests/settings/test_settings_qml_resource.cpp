@@ -75,6 +75,64 @@ private slots:
         QVERIFY(qml.contains("StackLayout"));
     }
 
+    void bindingsDialogsUseApplicationOverlay()
+    {
+        QFile bindingsPageQml(QFINDTESTDATA("../../src/settings/qml/BindingsPage.qml"));
+        QVERIFY(bindingsPageQml.open(QIODevice::ReadOnly | QIODevice::Text));
+
+        const QString qml = QString::fromUtf8(bindingsPageQml.readAll());
+        QVERIFY(qml.contains("parent: Overlay.overlay"));
+        QVERIFY(qml.contains("id: dialogShadow"));
+        QVERIFY(!qml.contains("id: pickerShadow"));
+    }
+
+    void bindingsDialogsAvoidSquareTitleBarBackgrounds()
+    {
+        QFile bindingsPageQml(QFINDTESTDATA("../../src/settings/qml/BindingsPage.qml"));
+        QVERIFY(bindingsPageQml.open(QIODevice::ReadOnly | QIODevice::Text));
+
+        const QString qml = QString::fromUtf8(bindingsPageQml.readAll());
+        QVERIFY(qml.contains("id: dialogHeader"));
+        QVERIFY(qml.contains("Item {\n                                Layout.fillWidth: true\n                                Layout.preferredHeight: 52"));
+    }
+
+    void bindingsDialogUsesSinglePageSwitcher()
+    {
+        QFile bindingsPageQml(QFINDTESTDATA("../../src/settings/qml/BindingsPage.qml"));
+        QVERIFY(bindingsPageQml.open(QIODevice::ReadOnly | QIODevice::Text));
+
+        const QString qml = QString::fromUtf8(bindingsPageQml.readAll());
+        QVERIFY(qml.contains("editorShowingPicker"));
+        QVERIFY(qml.contains("id: editorStack"));
+        QVERIFY(!qml.contains("id: pickerLoader"));
+    }
+
+    void bindingsDialogUsesCompactSizeAndContentMargins()
+    {
+        QFile bindingsPageQml(QFINDTESTDATA("../../src/settings/qml/BindingsPage.qml"));
+        QVERIFY(bindingsPageQml.open(QIODevice::ReadOnly | QIODevice::Text));
+
+        const QString qml = QString::fromUtf8(bindingsPageQml.readAll());
+        QVERIFY(qml.contains("width: Math.min(parent.width - 48, 560)"));
+        QVERIFY(qml.contains("height: Math.min(parent.height - 48, 420)"));
+        QVERIFY(qml.contains("id: editorPage"));
+        QVERIFY(qml.contains("id: pickerPage"));
+        QVERIFY(qml.contains("anchors.margins: 20"));
+        QVERIFY(qml.contains("anchors.margins: 16"));
+    }
+
+    void applicationPickerUsesSimplifiedStyledControls()
+    {
+        QFile applicationPickerQml(QFINDTESTDATA("../../src/settings/qml/ApplicationPicker.qml"));
+        QVERIFY(applicationPickerQml.open(QIODevice::ReadOnly | QIODevice::Text));
+
+        const QString qml = QString::fromUtf8(applicationPickerQml.readAll());
+        QVERIFY(qml.contains("StyledTextField"));
+        QVERIFY(!qml.contains("CheckBox"));
+        QVERIFY(!qml.contains("Button {"));
+        QVERIFY(!qml.contains("DetailChip"));
+    }
+
     void settingsPageContainsAutostartToggle()
     {
         QFile settingsPageQml(QFINDTESTDATA("../../src/settings/qml/SettingsPage.qml"));

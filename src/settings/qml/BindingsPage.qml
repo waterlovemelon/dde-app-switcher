@@ -16,6 +16,7 @@ Item {
     property bool editorLaunchIfNotRunning: true
     property bool editorFocusExistingWindow: true
     property string editorErrorText: ""
+    property bool editorShowingPicker: false
 
     function displayText(value, fallback) {
         if (value === undefined || value === null || String(value).trim().length === 0) {
@@ -75,12 +76,13 @@ Item {
         editorLaunchIfNotRunning = binding.launch_if_not_running === undefined ? true : binding.launch_if_not_running
         editorFocusExistingWindow = binding.focus_existing_window === undefined ? true : binding.focus_existing_window
         editorErrorText = ""
+        editorShowingPicker = false
         editorLoader.active = true
     }
 
     function closeEditor() {
+        editorShowingPicker = false
         editorLoader.active = false
-        pickerLoader.active = false
     }
 
     function saveFromEditor(desktopId, hotkey, strategy, launch, focus, hotkeyField) {
@@ -289,14 +291,13 @@ Item {
         }
     }
 
-    // ═══════════════════════════════════════
-    //  Editor — loaded dynamically, destroyed on close
-    // ═══════════════════════════════════════
+    // Dialog loaded dynamically, destroyed on close.
     Loader {
         id: editorLoader
         active: false
-        z: 100
+        parent: Overlay.overlay
         anchors.fill: parent
+        z: 1000
 
         sourceComponent: Component {
             Item {
@@ -305,323 +306,302 @@ Item {
                 // Mask
                 Rectangle {
                     anchors.fill: parent
-                    color: "#80000000"
+                    color: "#66000000"
 
                     MouseArea {
                         anchors.fill: parent
+                        acceptedButtons: Qt.AllButtons
+                        hoverEnabled: true
                         onClicked: page.closeEditor()
                     }
                 }
 
-                // Window
-                Rectangle {
+                Item {
                     id: win
-                    width: Math.min(page.width - 48, 500)
-                    height: winContent.implicitHeight
-                    radius: 14
-                    color: "#ffffff"
-                    border.width: 1
-                    border.color: "#e0e0e0"
-                    x: Math.round((page.width - width) / 2)
-                    y: Math.round((page.height - height) / 2)
-                    clip: true
+                    width: Math.min(parent.width - 48, 560)
+                    height: Math.min(parent.height - 48, 420)
+                    x: Math.round((parent.width - width) / 2)
+                    y: Math.round((parent.height - height) / 2)
 
-                    ColumnLayout {
-                        id: winContent
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        spacing: 0
-
-                        // Title bar
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 48
-                            color: "#fafbfc"
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                width: parent.width
-                                height: 1
-                                color: "#e8e8e8"
-                            }
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 16
-                                anchors.rightMargin: 12
-                                spacing: 10
-                                Rectangle {
-                                    Layout.preferredWidth: 24
-                                    Layout.preferredHeight: 24
-                                    radius: 6
-                                    color: "#e0f2f1"
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: page.editorOriginalId.length > 0
-                                            ? page.iconLetter(page.editorOriginalBinding) : "+"
-                                        color: "#00695c"
-                                        font.pixelSize: 11
-                                        font.weight: Font.Bold
-                                    }
-                                }
-                                Text {
-                                    text: page.editorOriginalId.length > 0 ? qsTr("编辑绑定") : qsTr("添加绑定")
-                                    color: "#1a1a1a"
-                                    font.pixelSize: 14
-                                    font.weight: Font.DemiBold
-                                }
-                                Item { Layout.fillWidth: true }
-                                Rectangle {
-                                    Layout.preferredWidth: 28
-                                    Layout.preferredHeight: 28
-                                    radius: 14
-                                    color: closeBtnMouse.containsMouse ? "#fee" : "transparent"
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "✕"
-                                        color: closeBtnMouse.containsMouse ? "#c62828" : "#999"
-                                        font.pixelSize: 14
-                                    }
-                                    MouseArea {
-                                        id: closeBtnMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: page.closeEditor()
-                                    }
-                                }
-                            }
-                        }
-
-                        // Form
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            Layout.leftMargin: 20
-                            Layout.rightMargin: 20
-                            Layout.topMargin: 16
-                            Layout.bottomMargin: 16
-                            spacing: 12
-
-                            GridLayout {
-                                Layout.fillWidth: true
-                                columns: 2
-                                rowSpacing: 8
-                                columnSpacing: 14
-
-                                Text { text: qsTr("应用"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 8
-                                    StyledTextField {
-                                        id: fldDesktopId
-                                        Layout.fillWidth: true
-                                        text: page.editorDesktopId
-                                        placeholderText: qsTr("org.deepin.Terminal.desktop")
-                                    }
-                                    StyledButton {
-                                        text: qsTr("选择")
-                                        font.pixelSize: 12
-                                        onClicked: pickerLoader.active = true
-                                    }
-                                }
-
-                                Text { text: qsTr("快捷键"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                                HotkeyRecorder {
-                                    id: fldHotkey
-                                    Layout.fillWidth: true
-                                    text: page.editorHotkey
-                                    placeholderText: qsTr("Alt+Return")
-                                    controller: page.controller
-                                    excludeActionId: page.editorOriginalId
-                                }
-
-                                Rectangle {
-                                    Layout.columnSpan: 2
-                                    Layout.fillWidth: true
-                                    Layout.topMargin: 4
-                                    Layout.bottomMargin: 4
-                                    height: 1
-                                    color: "#f0f0f0"
-                                }
-
-                                Text { text: qsTr("多窗口策略"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                                StyledComboBox {
-                                    id: fldStrategy
-                                    Layout.fillWidth: true
-                                    textRole: "label"
-                                    valueRole: "value"
-                                    model: [
-                                        { "label": qsTr("默认"), "value": "default" },
-                                        { "label": qsTr("最近"), "value": "recent" },
-                                        { "label": qsTr("循环"), "value": "cycle" },
-                                        { "label": qsTr("选择器"), "value": "picker" }
-                                    ]
-                                    Component.onCompleted: currentIndex = Math.max(0, indexOfValue(page.editorStrategy))
-                                }
-
-                                Text { text: qsTr("未运行时"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                                StyledCheckBox {
-                                    id: fldLaunch
-                                    checked: page.editorLaunchIfNotRunning
-                                    text: qsTr("自动启动应用")
-                                }
-
-                                Text { text: qsTr("已有窗口"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                                StyledCheckBox {
-                                    id: fldFocus
-                                    checked: page.editorFocusExistingWindow
-                                    text: qsTr("直接聚焦已有窗口")
-                                }
-                            }
-
-                            Text {
-                                Layout.fillWidth: true
-                                visible: page.editorErrorText.length > 0
-                                text: page.editorErrorText
-                                color: "#c62828"
-                                font.pixelSize: 13
-                                wrapMode: Text.WordWrap
-                            }
-                        }
-
-                        // Footer
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 52
-                            color: "#fafbfc"
-                            Rectangle {
-                                anchors.top: parent.top
-                                width: parent.width
-                                height: 1
-                                color: "#e8e8e8"
-                            }
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 16
-                                anchors.rightMargin: 16
-                                spacing: 10
-                                Item { Layout.fillWidth: true }
-                                StyledButton {
-                                    text: qsTr("取消")
-                                    onClicked: page.closeEditor()
-                                }
-                                StyledButton {
-                                    text: qsTr("保存")
-                                    style: "primary"
-                                    enabled: fldDesktopId.text.trim().length > 0
-                                              && fldHotkey.text.trim().length > 0
-                                              && !fldHotkey.conflict
-                                    onClicked: page.saveFromEditor(
-                                        fldDesktopId.text, fldHotkey.text,
-                                        fldStrategy.currentValue,
-                                        fldLaunch.checked, fldFocus.checked,
-                                        fldHotkey
-                                    )
-                                }
-                            }
-                        }
+                    Rectangle {
+                        id: dialogShadow
+                        anchors.fill: dialogPanel
+                        anchors.topMargin: 8
+                        anchors.bottomMargin: -8
+                        radius: dialogPanel.radius
+                        color: "#26000000"
                     }
-                }
 
-                // App picker (loaded on top)
-                Loader {
-                    id: pickerLoader
-                    active: false
-                    anchors.fill: parent
-                    z: 1
+                    Rectangle {
+                        anchors.fill: dialogPanel
+                        anchors.margins: -1
+                        anchors.topMargin: 1
+                        radius: dialogPanel.radius + 1
+                        color: "#10000000"
+                    }
 
-                    sourceComponent: Component {
-                        Item {
+                    Rectangle {
+                        id: dialogPanel
+                        anchors.fill: parent
+                        radius: 14
+                        color: "#ffffff"
+                        border.width: 1
+                        border.color: "#d7dce0"
+                        clip: true
+
+                        MouseArea {
                             anchors.fill: parent
+                            acceptedButtons: Qt.AllButtons
+                            hoverEnabled: true
+                        }
 
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#80000000"
-                                MouseArea {
+                        ColumnLayout {
+                            id: winContent
+                            anchors.fill: parent
+                            spacing: 0
+
+                            // Header
+                            Item {
+                                id: dialogHeader
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 48
+                                Rectangle {
+                                    anchors.bottom: parent.bottom
+                                    width: parent.width
+                                    height: 1
+                                    color: "#e8e8e8"
+                                }
+                                RowLayout {
                                     anchors.fill: parent
-                                    onClicked: pickerLoader.active = false
+                                    anchors.leftMargin: 16
+                                    anchors.rightMargin: 12
+                                    spacing: 10
+                                    Rectangle {
+                                        Layout.preferredWidth: 24
+                                        Layout.preferredHeight: 24
+                                        radius: 6
+                                        color: "#e0f2f1"
+                                        Text {
+                                            anchors.centerIn: parent
+                                        text: page.editorShowingPicker
+                                              ? "A"
+                                              : page.editorOriginalId.length > 0
+                                                ? page.iconLetter(page.editorOriginalBinding)
+                                                : "+"
+                                            color: "#00695c"
+                                            font.pixelSize: 11
+                                            font.weight: Font.Bold
+                                        }
+                                    }
+                                    Text {
+                                        text: page.editorShowingPicker
+                                              ? qsTr("选择应用")
+                                              : page.editorOriginalId.length > 0 ? qsTr("编辑绑定") : qsTr("添加绑定")
+                                        color: "#1a1a1a"
+                                        font.pixelSize: 14
+                                        font.weight: Font.DemiBold
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                    Rectangle {
+                                        Layout.preferredWidth: 28
+                                        Layout.preferredHeight: 28
+                                        radius: 14
+                                        visible: page.editorShowingPicker
+                                        color: backBtnMouse.containsMouse ? "#f2f3f5" : "transparent"
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "<"
+                                            color: "#777777"
+                                            font.pixelSize: 16
+                                            font.weight: Font.DemiBold
+                                        }
+                                        MouseArea {
+                                            id: backBtnMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: page.editorShowingPicker = false
+                                        }
+                                    }
+                                    Rectangle {
+                                        Layout.preferredWidth: 28
+                                        Layout.preferredHeight: 28
+                                        radius: 14
+                                        color: closeBtnMouse.containsMouse ? "#fee" : "transparent"
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "x"
+                                            color: closeBtnMouse.containsMouse ? "#c62828" : "#999"
+                                            font.pixelSize: 14
+                                        }
+                                        MouseArea {
+                                            id: closeBtnMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: page.closeEditor()
+                                        }
+                                    }
                                 }
                             }
 
-                            Rectangle {
-                                width: Math.min(page.width - 48, 640)
-                                height: Math.min(page.height - 48, 480)
-                                radius: 14
-                                color: "#ffffff"
-                                border.width: 1
-                                border.color: "#e0e0e0"
-                                x: Math.round((page.width - width) / 2)
-                                y: Math.round((page.height - height) / 2)
-                                clip: true
+                            StackLayout {
+                                id: editorStack
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                currentIndex: page.editorShowingPicker ? 1 : 0
 
-                                ColumnLayout {
-                                    anchors.fill: parent
-                                    spacing: 0
+                                Item {
+                                    id: editorPage
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
 
-                                    Rectangle {
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: 48
-                                        color: "#fafbfc"
-                                        Rectangle {
-                                            anchors.bottom: parent.bottom
-                                            width: parent.width
-                                            height: 1
-                                            color: "#e8e8e8"
-                                        }
-                                        RowLayout {
-                                            anchors.fill: parent
-                                            anchors.leftMargin: 16
-                                            anchors.rightMargin: 12
-                                            spacing: 10
-                                            Rectangle {
-                                                Layout.preferredWidth: 24
-                                                Layout.preferredHeight: 24
-                                                radius: 6
-                                                color: "#e0f2f1"
-                                                Text {
-                                                    anchors.centerIn: parent
-                                                    text: "📱"
+                                    ColumnLayout {
+                                        anchors.fill: parent
+                                        anchors.margins: 20
+                                        spacing: 12
+
+                                        GridLayout {
+                                            Layout.fillWidth: true
+                                            columns: 2
+                                            rowSpacing: 8
+                                            columnSpacing: 14
+
+                                            Text { text: qsTr("应用"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                            RowLayout {
+                                                Layout.fillWidth: true
+                                                spacing: 8
+                                                StyledTextField {
+                                                    id: fldDesktopId
+                                                    Layout.fillWidth: true
+                                                    text: page.editorDesktopId
+                                                    placeholderText: qsTr("org.deepin.Terminal.desktop")
+                                                }
+                                                StyledButton {
+                                                    text: qsTr("选择")
                                                     font.pixelSize: 12
+                                                    onClicked: page.editorShowingPicker = true
                                                 }
                                             }
-                                            Text {
-                                                text: qsTr("选择应用")
-                                                color: "#1a1a1a"
-                                                font.pixelSize: 14
-                                                font.weight: Font.DemiBold
+
+                                            Text { text: qsTr("快捷键"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                            HotkeyRecorder {
+                                                id: fldHotkey
+                                                Layout.fillWidth: true
+                                                text: page.editorHotkey
+                                                placeholderText: qsTr("Alt+Return")
+                                                controller: page.controller
+                                                excludeActionId: page.editorOriginalId
                                             }
-                                            Item { Layout.fillWidth: true }
+
                                             Rectangle {
-                                                Layout.preferredWidth: 28
-                                                Layout.preferredHeight: 28
-                                                radius: 14
-                                                color: pCloseMouse.containsMouse ? "#fee" : "transparent"
-                                                Text {
-                                                    anchors.centerIn: parent
-                                                    text: "✕"
-                                                    color: pCloseMouse.containsMouse ? "#c62828" : "#999"
-                                                    font.pixelSize: 14
-                                                }
-                                                MouseArea {
-                                                    id: pCloseMouse
-                                                    anchors.fill: parent
-                                                    hoverEnabled: true
-                                                    cursorShape: Qt.PointingHandCursor
-                                                    onClicked: pickerLoader.active = false
-                                                }
+                                                Layout.columnSpan: 2
+                                                Layout.fillWidth: true
+                                                Layout.topMargin: 4
+                                                Layout.bottomMargin: 4
+                                                height: 1
+                                                color: "#f0f0f0"
+                                            }
+
+                                            Text { text: qsTr("多窗口策略"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                            StyledComboBox {
+                                                id: fldStrategy
+                                                Layout.fillWidth: true
+                                                textRole: "label"
+                                                valueRole: "value"
+                                                model: [
+                                                    { "label": qsTr("默认"), "value": "default" },
+                                                    { "label": qsTr("最近"), "value": "recent" },
+                                                    { "label": qsTr("循环"), "value": "cycle" },
+                                                    { "label": qsTr("选择器"), "value": "picker" }
+                                                ]
+                                                Component.onCompleted: currentIndex = Math.max(0, indexOfValue(page.editorStrategy))
+                                            }
+
+                                            Text { text: qsTr("未运行时"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                            StyledCheckBox {
+                                                id: fldLaunch
+                                                checked: page.editorLaunchIfNotRunning
+                                                text: qsTr("自动启动应用")
+                                            }
+
+                                            Text { text: qsTr("已有窗口"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                            StyledCheckBox {
+                                                id: fldFocus
+                                                checked: page.editorFocusExistingWindow
+                                                text: qsTr("直接聚焦已有窗口")
                                             }
                                         }
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            visible: page.editorErrorText.length > 0
+                                            text: page.editorErrorText
+                                            color: "#c62828"
+                                            font.pixelSize: 13
+                                            wrapMode: Text.WordWrap
+                                        }
+
+                                        Item { Layout.fillHeight: true }
                                     }
+                                }
+
+                                Item {
+                                    id: pickerPage
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
 
                                     ApplicationPicker {
-                                        Layout.fillWidth: true
-                                        Layout.fillHeight: true
-                                        Layout.margins: 12
+                                        anchors.fill: parent
+                                        anchors.margins: 16
                                         applications: controller.applications
                                         selectedDesktopId: fldDesktopId.text
-                                        selectable: true
                                         onApplicationSelected: function(application) {
                                             fldDesktopId.text = page.displayText(application.desktop_id, "")
-                                            pickerLoader.active = false
+                                            page.editorShowingPicker = false
                                         }
+                                    }
+                                }
+                            }
+
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 52
+
+                                Rectangle {
+                                    anchors.top: parent.top
+                                    width: parent.width
+                                    height: 1
+                                    color: "#e8e8e8"
+                                }
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 16
+                                    spacing: 10
+                                    Item { Layout.fillWidth: true }
+                                    StyledButton {
+                                        text: page.editorShowingPicker ? qsTr("返回") : qsTr("取消")
+                                        onClicked: {
+                                            if (page.editorShowingPicker) {
+                                                page.editorShowingPicker = false
+                                            } else {
+                                                page.closeEditor()
+                                            }
+                                        }
+                                    }
+                                    StyledButton {
+                                        visible: !page.editorShowingPicker
+                                        text: qsTr("保存")
+                                        style: "primary"
+                                        enabled: fldDesktopId.text.trim().length > 0
+                                                  && fldHotkey.text.trim().length > 0
+                                                  && !fldHotkey.conflict
+                                        onClicked: page.saveFromEditor(
+                                            fldDesktopId.text, fldHotkey.text,
+                                            fldStrategy.currentValue,
+                                            fldLaunch.checked, fldFocus.checked,
+                                            fldHotkey
+                                        )
                                     }
                                 }
                             }
