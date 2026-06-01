@@ -11,6 +11,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(GNUInstallDirs)
 
+# UOS packaging paths (compliant with UOS App Store Packaging Specification)
+set(UOS_APP_ID "cn.org.oops.deepswitch")
+set(UOS_APP_DIR "/opt/apps/${UOS_APP_ID}")
+
 find_package(Qt6 REQUIRED COMPONENTS Core Test Gui DBus)
 find_package(Qt6 COMPONENTS Qml Quick QuickControls2 QUIET)
 find_package(X11 REQUIRED)
@@ -156,17 +160,17 @@ target_link_libraries(deepswitch-agent PRIVATE
 )
 
 install(TARGETS deepswitch-agent
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RUNTIME DESTINATION ${UOS_APP_DIR}/files/bin
 )
 
 install(FILES
     deepin-manico-like-design.md
     docs/m0-x11-findings.md
-    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+    DESTINATION ${UOS_APP_DIR}/files/doc
 )
 
 install(DIRECTORY docs/superpowers/plans
-    DESTINATION ${CMAKE_INSTALL_DOCDIR}/superpowers
+    DESTINATION ${UOS_APP_DIR}/files/doc/superpowers
 )
 
 if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
@@ -193,7 +197,7 @@ if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
     )
 
     install(TARGETS deepswitch-overlay
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        RUNTIME DESTINATION ${UOS_APP_DIR}/files/bin
     )
 
     add_executable(deepswitch-settings
@@ -216,15 +220,19 @@ if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
     )
 
     install(TARGETS deepswitch-settings
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        RUNTIME DESTINATION ${UOS_APP_DIR}/files/bin
     )
 
-    install(FILES packaging/linux/org.deepin.DeepSwitch.desktop
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
+    install(FILES packaging/linux/cn.org.oops.deepswitch.desktop
+        DESTINATION ${UOS_APP_DIR}/entries/applications
     )
 
-    install(FILES packaging/linux/icons/hicolor/scalable/apps/deepswitch.svg
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
+    install(FILES packaging/linux/icons/hicolor/scalable/apps/cn.org.oops.deepswitch.svg
+        DESTINATION ${UOS_APP_DIR}/entries/icons/hicolor/scalable/apps
+    )
+
+    install(FILES packaging/linux/info
+        DESTINATION ${UOS_APP_DIR}
     )
 else()
     message(STATUS "Qt6 QML/Quick development packages not found; skipping deepswitch-overlay, deepswitch-settings GUI target and launcher entry install")

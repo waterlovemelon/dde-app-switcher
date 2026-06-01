@@ -1,5 +1,7 @@
-deepswitch (0.1.0-1) unstable; urgency=medium
+cn.org.oops.deepswitch (0.1.0-1) unstable; urgency=medium
 
-  * Initial Debian packaging for the DeepSwitch user-session application.
+  * Initial Debian packaging compliant with UOS packaging specification.
+  * Install to /opt/apps/cn.org.oops.deepswitch/ per UOS requirements.
+  * Use entries/ and files/ directory structure with info metadata.
 
  -- DeepSwitch Developers <deepswitch@example.invalid>  Thu, 28 May 2026 00:00:00 +0800

@@ -1,4 +1,4 @@
-Source: deepswitch
+Source: cn.org.oops.deepswitch
 Section: x11
 Priority: optional
 Maintainer: DeepSwitch Developers <deepswitch@example.invalid>
@@ -16,7 +16,7 @@ Standards-Version: 4.7.0
 Rules-Requires-Root: no
 Homepage: https://github.com/deepin-community/deepswitch
 
-Package: deepswitch
+Package: cn.org.oops.deepswitch
 Architecture: any
 Depends:
  ${misc:Depends},
@@ -28,7 +28,9 @@ Depends:
  libqt6quickcontrols2-6,
  libqt6dbus6,
  libx11-6
-Description: Keyboard-first user-session application switcher for deepin
+Description: Keyboard-first app switcher for deepin
  DeepSwitch maps global hotkeys to desktop applications, launching missing
  apps and focusing or cycling existing windows. It runs as a user-session
  application and exposes a Qt Quick settings UI; it is not a system daemon.
+ .
+ 键盘优先的应用切换器，通过全局快捷键启动、聚焦或切换应用程序窗口。
