@@ -198,6 +198,8 @@ if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
 
     add_executable(deepswitch-settings
         src/settings/main.cpp
+        src/overlay/IconProvider.cpp
+        src/overlay/IconProvider.h
         src/settings/qml/qml.qrc
         ${TRANSLATION_QM_FILES}
         ${TRANSLATION_QRC}

@@ -45,6 +45,17 @@ Item {
         return name.charAt(0).toLocaleUpperCase()
     }
 
+    function appIconForDesktopId(desktopId) {
+        var id = displayText(desktopId, "")
+        if (id.length === 0) return "application-x-executable"
+        for (var i = 0; i < controller.applications.length; ++i) {
+            var app = controller.applications[i]
+            if (app.desktop_id === id)
+                return app.icon || "application-x-executable"
+        }
+        return "application-x-executable"
+    }
+
     function isEnabled(binding) {
         return binding.enabled === undefined || binding.enabled
     }
@@ -160,18 +171,14 @@ Item {
                     anchors.rightMargin: 14
                     spacing: 12
 
-                    Rectangle {
+                    Image {
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
-                        radius: 8
-                        color: page.isEnabled(modelData) ? "#e0f2f1" : "#f5f5f5"
-                        Text {
-                            anchors.centerIn: parent
-                            text: page.iconLetter(modelData)
-                            color: page.isEnabled(modelData) ? "#00695c" : "#999999"
-                            font.pixelSize: 15
-                            font.weight: Font.DemiBold
-                        }
+                        sourceSize.width: 34
+                        sourceSize.height: 34
+                        source: "image://theme/" + page.appIconForDesktopId(modelData.desktop_id)
+                        fillMode: Image.PreserveAspectFit
+                        opacity: page.isEnabled(modelData) ? 1.0 : 0.4
                     }
 
                     ColumnLayout {

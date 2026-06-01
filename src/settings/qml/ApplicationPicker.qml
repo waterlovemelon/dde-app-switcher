@@ -113,22 +113,13 @@ Item {
                     anchors.rightMargin: 12
                     spacing: 12
 
-                    Rectangle {
+                    Image {
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
-                        radius: 8
-                        color: "#e0f2f1"
-
-                        Text {
-                            anchors.centerIn: parent
-                            width: parent.width - 8
-                            horizontalAlignment: Text.AlignHCenter
-                            text: picker.textValue(modelData.localized_name || modelData.name, "?").charAt(0).toLocaleUpperCase()
-                            color: "#00695c"
-                            font.pixelSize: 15
-                            font.weight: Font.DemiBold
-                            elide: Text.ElideRight
-                        }
+                        sourceSize.width: 34
+                        sourceSize.height: 34
+                        source: "image://theme/" + (modelData.icon || "application-x-executable")
+                        fillMode: Image.PreserveAspectFit
                     }
 
                     ColumnLayout {

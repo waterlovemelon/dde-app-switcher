@@ -1,4 +1,5 @@
 #include "settings/SettingsController.h"
+#include "overlay/IconProvider.h"
 #include "core/ConfigManager.h"
 #include "ipc/AgentDBusContract.h"
 
@@ -86,6 +87,7 @@ int main(int argc, char* argv[])
     }
 
     QQmlApplicationEngine engine;
+    engine.addImageProvider(QStringLiteral("theme"), new deepswitch::IconProvider);
     engine.rootContext()->setContextProperty(QStringLiteral("settingsController"), &settingsController);
 
     QObject::connect(
