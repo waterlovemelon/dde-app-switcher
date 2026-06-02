@@ -16,7 +16,7 @@ private slots:
             QStringLiteral("packaging/debian/rules"),
             QStringLiteral("packaging/debian/changelog"),
             QStringLiteral("packaging/debian/copyright"),
-            QStringLiteral("packaging/debian/deepswitch.install"),
+            QStringLiteral("packaging/debian/cn.org.oops.oops-jump.install"),
         };
 
         for (const QString& path : requiredFiles) {
@@ -39,7 +39,7 @@ private slots:
     {
         const QString controlText = readText(QStringLiteral("packaging/debian/control"));
 
-        QVERIFY(controlText.contains(QStringLiteral("Package: deepswitch")));
+        QVERIFY(controlText.contains(QStringLiteral("Package: cn.org.oops.oops-jump")));
         QVERIFY(controlText.contains(QStringLiteral("qt6-base-dev")));
         QVERIFY(controlText.contains(QStringLiteral("qt6-declarative-dev")));
         QVERIFY(controlText.contains(QStringLiteral("libx11-dev")));
@@ -66,13 +66,11 @@ private slots:
 
     void installManifestPackagesSessionBinariesAndAssets()
     {
-        const QString installText = readText(QStringLiteral("packaging/debian/deepswitch.install"));
+        const QString installText = readText(QStringLiteral("packaging/debian/cn.org.oops.oops-jump.install"));
 
-        QVERIFY(installText.contains(QStringLiteral("usr/bin/deepswitch-agent")));
-        QVERIFY(installText.contains(QStringLiteral("usr/bin/deepswitch-settings")));
-        QVERIFY(installText.contains(QStringLiteral("usr/share/applications/org.deepin.DeepSwitch.desktop")));
-        QVERIFY(installText.contains(QStringLiteral("usr/share/icons/hicolor/scalable/apps/deepswitch.svg")));
-        QVERIFY(installText.contains(QStringLiteral("usr/share/doc/deepswitch/")));
+        QVERIFY(installText.contains(QStringLiteral("opt/apps/cn.org.oops.oops-jump/files/")));
+        QVERIFY(installText.contains(QStringLiteral("opt/apps/cn.org.oops.oops-jump/entries/")));
+        QVERIFY(installText.contains(QStringLiteral("opt/apps/cn.org.oops.oops-jump/info")));
         QVERIFY(!installText.contains(QStringLiteral("systemd")));
     }
 
@@ -87,9 +85,10 @@ private slots:
         QVERIFY(elseStart > gateStart);
 
         const QString gatedInstallBlock = cmakeText.mid(gateStart, elseStart - gateStart);
-        QVERIFY(gatedInstallBlock.contains(QStringLiteral("deepswitch-settings")));
-        QVERIFY(gatedInstallBlock.contains(QStringLiteral("org.deepin.DeepSwitch.desktop")));
-        QVERIFY(gatedInstallBlock.contains(QStringLiteral("deepswitch.svg")));
+        QVERIFY(gatedInstallBlock.contains(QStringLiteral("oops-jump-settings")));
+        QVERIFY(gatedInstallBlock.contains(QStringLiteral("cn.org.oops.oops-jump.desktop")));
+        QVERIFY(gatedInstallBlock.contains(QStringLiteral("packaging/linux/icons/hicolor/")));
+        QVERIFY(gatedInstallBlock.contains(QStringLiteral("*.png")));
     }
 
 private:

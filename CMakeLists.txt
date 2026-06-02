@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(deepswitch VERSION 0.1.0 LANGUAGES CXX)
+project(oopsjump VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,7 +12,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(GNUInstallDirs)
 
 # UOS packaging paths (compliant with UOS App Store Packaging Specification)
-set(UOS_APP_ID "cn.org.oops.deepswitch")
+set(UOS_APP_ID "cn.org.oops.oops-jump")
 set(UOS_APP_DIR "/opt/apps/${UOS_APP_ID}")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Test Gui DBus)
@@ -25,13 +25,13 @@ enable_testing()
 find_package(Qt6 COMPONENTS LinguistTools QUIET)
 
 set(TRANSLATION_TS_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/translations/deepswitch_zh_CN.ts
+    ${CMAKE_CURRENT_SOURCE_DIR}/translations/oops-jump_zh_CN.ts
 )
 set(TRANSLATION_QM_DIR ${CMAKE_CURRENT_BINARY_DIR}/translations)
 file(MAKE_DIRECTORY ${TRANSLATION_QM_DIR})
 
 if(Qt6LinguistTools_FOUND)
-    qt_add_translations(deepswitch-core
+    qt_add_translations(oopsjump-core
         TS_FILES ${TRANSLATION_TS_FILES}
         QM_FILES_OUTPUT_VARIABLE TRANSLATION_QM_FILES
     )
@@ -63,7 +63,7 @@ else()
     set(TRANSLATION_QRC ${TRANSLATION_QM_DIR}/translations.qrc)
 endif()
 
-add_library(deepswitch_core STATIC
+add_library(oopsjump_core STATIC
     src/core/ActionEngine.cpp
     src/core/AppMatcher.cpp
     src/core/AppRegistry.cpp
@@ -76,90 +76,90 @@ add_library(deepswitch_core STATIC
     src/core/LogFileManager.cpp
 )
 
-target_include_directories(deepswitch_core PUBLIC
+target_include_directories(oopsjump_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(deepswitch_core PUBLIC
+target_link_libraries(oopsjump_core PUBLIC
     Qt6::Core
 )
 
-add_library(deepswitch_x11 STATIC
+add_library(oopsjump_x11 STATIC
     src/backends/x11/X11Connection.cpp
     src/backends/x11/X11HotkeyBackend.cpp
     src/backends/x11/X11WindowBackend.cpp
 )
 
-target_include_directories(deepswitch_x11 PUBLIC
+target_include_directories(oopsjump_x11 PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(deepswitch_x11 PUBLIC
-    deepswitch_core
+target_link_libraries(oopsjump_x11 PUBLIC
+    oopsjump_core
     Qt6::Core
     Qt6::Gui
     X11::X11
     Xi
 )
 
-add_library(deepswitch_ipc STATIC
+add_library(oopsjump_ipc STATIC
     src/ipc/AgentDBusClient.cpp
     src/ipc/AgentTypes.cpp
 )
 
-target_include_directories(deepswitch_ipc PUBLIC
+target_include_directories(oopsjump_ipc PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(deepswitch_ipc PUBLIC
-    deepswitch_core
+target_link_libraries(oopsjump_ipc PUBLIC
+    oopsjump_core
     Qt6::Core
     Qt6::DBus
 )
 
-add_library(deepswitch_settings STATIC
+add_library(oopsjump_settings STATIC
     src/settings/SettingsController.cpp
 )
 
-target_include_directories(deepswitch_settings PUBLIC
+target_include_directories(oopsjump_settings PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(deepswitch_settings PUBLIC
-    deepswitch_ipc
+target_link_libraries(oopsjump_settings PUBLIC
+    oopsjump_ipc
     Qt6::Core
 )
 
-add_library(deepswitch_agent STATIC
+add_library(oopsjump_agent STATIC
     src/agent/AgentController.cpp
     src/ipc/AgentDBusService.cpp
 )
 
-target_include_directories(deepswitch_agent PUBLIC
+target_include_directories(oopsjump_agent PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(deepswitch_agent PUBLIC
-    deepswitch_core
-    deepswitch_ipc
-    deepswitch_x11
+target_link_libraries(oopsjump_agent PUBLIC
+    oopsjump_core
+    oopsjump_ipc
+    oopsjump_x11
     Qt6::Core
 )
 
-add_executable(deepswitch-agent
+add_executable(oops-jump-agent
     src/agent/main.cpp
 )
 
-target_link_libraries(deepswitch-agent PRIVATE
-    deepswitch_agent
-    deepswitch_core
-    deepswitch_ipc
-    deepswitch_x11
+target_link_libraries(oops-jump-agent PRIVATE
+    oopsjump_agent
+    oopsjump_core
+    oopsjump_ipc
+    oopsjump_x11
     Qt6::Core
     Qt6::DBus
 )
 
-install(TARGETS deepswitch-agent
+install(TARGETS oops-jump-agent
     RUNTIME DESTINATION ${UOS_APP_DIR}/files/bin
 )
 
@@ -174,7 +174,7 @@ install(DIRECTORY docs/superpowers/plans
 )
 
 if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
-    add_executable(deepswitch-overlay
+    add_executable(oops-jump-overlay
         src/overlay/main.cpp
         src/overlay/IconProvider.cpp
         src/overlay/IconProvider.h
@@ -185,22 +185,22 @@ if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
         ${TRANSLATION_QRC}
     )
 
-    target_include_directories(deepswitch-overlay PRIVATE
+    target_include_directories(oops-jump-overlay PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
 
-    target_link_libraries(deepswitch-overlay PRIVATE
+    target_link_libraries(oops-jump-overlay PRIVATE
         Qt6::Core
         Qt6::Gui
         Qt6::Qml
         Qt6::Quick
     )
 
-    install(TARGETS deepswitch-overlay
+    install(TARGETS oops-jump-overlay
         RUNTIME DESTINATION ${UOS_APP_DIR}/files/bin
     )
 
-    add_executable(deepswitch-settings
+    add_executable(oops-jump-settings
         src/settings/main.cpp
         src/overlay/IconProvider.cpp
         src/overlay/IconProvider.h
@@ -209,8 +209,8 @@ if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
         ${TRANSLATION_QRC}
     )
 
-    target_link_libraries(deepswitch-settings PRIVATE
-        deepswitch_settings
+    target_link_libraries(oops-jump-settings PRIVATE
+        oopsjump_settings
         Qt6::Core
         Qt6::Gui
         Qt6::Qml
@@ -219,23 +219,24 @@ if (Qt6Qml_FOUND AND Qt6Quick_FOUND AND Qt6QuickControls2_FOUND)
         Qt6::DBus
     )
 
-    install(TARGETS deepswitch-settings
+    install(TARGETS oops-jump-settings
         RUNTIME DESTINATION ${UOS_APP_DIR}/files/bin
     )
 
-    install(FILES packaging/linux/cn.org.oops.deepswitch.desktop
+    install(FILES packaging/linux/cn.org.oops.oops-jump.desktop
         DESTINATION ${UOS_APP_DIR}/entries/applications
     )
 
-    install(FILES packaging/linux/icons/hicolor/scalable/apps/cn.org.oops.deepswitch.svg
-        DESTINATION ${UOS_APP_DIR}/entries/icons/hicolor/scalable/apps
+    install(DIRECTORY packaging/linux/icons/hicolor/
+        DESTINATION ${UOS_APP_DIR}/entries/icons/hicolor
+        FILES_MATCHING PATTERN "*.png"
     )
 
     install(FILES packaging/linux/info
         DESTINATION ${UOS_APP_DIR}
     )
 else()
-    message(STATUS "Qt6 QML/Quick development packages not found; skipping deepswitch-overlay, deepswitch-settings GUI target and launcher entry install")
+    message(STATUS "Qt6 QML/Quick development packages not found; skipping oops-jump-overlay, oops-jump-settings GUI target and launcher entry install")
 endif()
 
 add_subdirectory(tests)

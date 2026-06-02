@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Oops Jump
+Name[zh_CN]=Oops Jump
+Comment=Configure Oops Jump app switching
+Comment[zh_CN]=配置 Oops Jump 应用切换
+Exec=/opt/apps/cn.org.oops.oops-jump/files/bin/oops-jump-settings
+Icon=/opt/apps/cn.org.oops.oops-jump/entries/icons/hicolor/256x256/apps/cn.org.oops.oops-jump.png
+Categories=Settings;System;
+Keywords=oops-jump;app;switcher;hotkey;
+Keywords[zh_CN]=应用切换;快捷键;
+StartupNotify=true
+StartupWMClass=cn.org.oops.oops-jump
+Terminal=false

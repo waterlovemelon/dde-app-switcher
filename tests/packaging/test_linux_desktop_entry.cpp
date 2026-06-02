@@ -6,7 +6,7 @@
 
 #include "core/DesktopEntry.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class LinuxDesktopEntryPackagingTest : public QObject {
     Q_OBJECT
@@ -14,18 +14,17 @@ class LinuxDesktopEntryPackagingTest : public QObject {
 private slots:
     void desktopEntryIsVisibleAndLaunchesSettings()
     {
-        const QString desktopPath = QStringLiteral("packaging/linux/org.deepin.DeepSwitch.desktop");
+        const QString desktopPath = QStringLiteral("packaging/linux/cn.org.oops.oops-jump.desktop");
 
         const auto result = DesktopEntry::fromFile(desktopPath);
         QVERIFY2(result.ok, qPrintable(result.message));
 
         const AppInfo app = result.value;
-        QCOMPARE(app.desktopId, QStringLiteral("org.deepin.DeepSwitch.desktop"));
-        QCOMPARE(app.name, QStringLiteral("DeepSwitch"));
-        QCOMPARE(app.exec, QStringLiteral("deepswitch-settings"));
-        QCOMPARE(app.icon, QStringLiteral("deepswitch"));
+        QCOMPARE(app.desktopId, QStringLiteral("cn.org.oops.oops-jump.desktop"));
+        QCOMPARE(app.name, QStringLiteral("Oops Jump"));
+        QVERIFY(app.exec.contains(QStringLiteral("oops-jump-settings")));
+        QCOMPARE(app.icon, QStringLiteral("/opt/apps/cn.org.oops.oops-jump/entries/icons/hicolor/256x256/apps/cn.org.oops.oops-jump.png"));
         QVERIFY(app.categories.contains(QStringLiteral("Settings")));
-        QVERIFY(app.categories.contains(QStringLiteral("Utility")));
         QVERIFY(!app.noDisplay);
 
         QFile desktopFile(desktopPath);
@@ -35,12 +34,17 @@ private slots:
         QVERIFY(!desktopText.contains(QRegularExpression(QStringLiteral("^NoDisplay=true$"), QRegularExpression::MultilineOption)));
     }
 
-    void scalableHicolorIconExists()
+    void hicolorIconSizesExist()
     {
-        const QFileInfo iconInfo(QStringLiteral("packaging/linux/icons/hicolor/scalable/apps/deepswitch.svg"));
-        QVERIFY(iconInfo.exists());
-        QVERIFY(iconInfo.isFile());
-        QVERIFY(iconInfo.size() > 0);
+        const QList<int> expectedSizes = {16, 24, 32, 48, 64, 96, 128, 256, 512};
+
+        for (const int size : expectedSizes) {
+            const QString iconPath = QStringLiteral("packaging/linux/icons/hicolor/%1x%1/apps/cn.org.oops.oops-jump.png").arg(size);
+            const QFileInfo iconInfo(iconPath);
+            QVERIFY2(iconInfo.exists(), qPrintable(iconPath + QStringLiteral(" is missing")));
+            QVERIFY2(iconInfo.isFile(), qPrintable(iconPath + QStringLiteral(" is not a regular file")));
+            QVERIFY2(iconInfo.size() > 0, qPrintable(iconPath + QStringLiteral(" is empty")));
+        }
     }
 };
 

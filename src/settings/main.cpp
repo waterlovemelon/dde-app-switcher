@@ -5,6 +5,9 @@
 
 #include <QCoreApplication>
 #include <QDBusServiceWatcher>
+#include <QDir>
+#include <QFileInfo>
+#include <QIcon>
 #include <QLocale>
 #include <QTranslator>
 #include <QGuiApplication>
@@ -16,13 +19,23 @@
 #include <QTimer>
 #include <QUrl>
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 namespace {
 
+constexpr auto DesktopFileName = "cn.org.oops.oops-jump";
+constexpr auto InstalledIconPath = "/opt/apps/cn.org.oops.oops-jump/entries/icons/hicolor/256x256/apps/cn.org.oops.oops-jump.png";
+
 bool tryStartAgent()
 {
-    const QString agentPath = QStandardPaths::findExecutable(QStringLiteral("deepswitch-agent"));
+    // First try same directory as this executable (installed layout).
+    const QString siblingPath = QCoreApplication::applicationDirPath()
+        + QDir::separator() + QStringLiteral("oops-jump-agent");
+    if (QFileInfo::exists(siblingPath) && QFileInfo(siblingPath).isExecutable()) {
+        return QProcess::startDetached(siblingPath, {});
+    }
+    // Fallback: search PATH.
+    const QString agentPath = QStandardPaths::findExecutable(QStringLiteral("oops-jump-agent"));
     if (agentPath.isEmpty()) {
         return false;
     }
@@ -34,9 +47,10 @@ bool tryStartAgent()
 int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
-    QGuiApplication::setApplicationName(QStringLiteral("DeepSwitch Settings"));
-    QGuiApplication::setDesktopFileName(QStringLiteral("org.deepin.DeepSwitch"));
-    QGuiApplication::setOrganizationName(QStringLiteral("DeepSwitch"));
+    QGuiApplication::setApplicationName(QStringLiteral("Oops Jump Settings"));
+    QGuiApplication::setDesktopFileName(QString::fromLatin1(DesktopFileName));
+    QGuiApplication::setOrganizationName(QStringLiteral("Oops Jump"));
+    QGuiApplication::setWindowIcon(QIcon(QString::fromLatin1(InstalledIconPath)));
 
     // Load language preference from config
     const auto configResult = ConfigManager(ConfigManager::defaultConfigPath()).load();
@@ -44,7 +58,7 @@ int main(int argc, char* argv[])
 
     const QLocale locale = (lang == "system") ? QLocale::system() : QLocale(lang);
     QTranslator translator;
-    if (translator.load(locale, "deepswitch", "_", ":/i18n")) {
+    if (translator.load(locale, "oops-jump", "_", ":/i18n")) {
         QGuiApplication::installTranslator(&translator);
     }
 
@@ -87,7 +101,7 @@ int main(int argc, char* argv[])
     }
 
     QQmlApplicationEngine engine;
-    engine.addImageProvider(QStringLiteral("theme"), new deepswitch::IconProvider);
+    engine.addImageProvider(QStringLiteral("theme"), new oopsjump::IconProvider);
     engine.rootContext()->setContextProperty(QStringLiteral("settingsController"), &settingsController);
 
     QObject::connect(
