@@ -3,7 +3,7 @@
 #include <QFileInfo>
 #include <QPainter>
 
-namespace deepswitch {
+namespace oopsjump {
 
 IconProvider::IconProvider()
     : QQuickImageProvider(QQuickImageProvider::Pixmap)

@@ -7,7 +7,7 @@
 #include <QProcessEnvironment>
 #include <QTemporaryDir>
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class ScopedConfigHome {
 public:
@@ -46,7 +46,7 @@ private slots:
         const auto enabled = manager.enable();
         QVERIFY2(enabled.ok, qPrintable(enabled.message));
 
-        QCOMPARE(manager.autostartFilePath(), dir.path() + "/autostart/deepswitch-agent.desktop");
+        QCOMPARE(manager.autostartFilePath(), dir.path() + "/autostart/oops-jump-agent.desktop");
         QVERIFY(manager.isEnabled());
 
         QFile file(manager.autostartFilePath());
@@ -54,8 +54,8 @@ private slots:
         QCOMPARE(QString::fromUtf8(file.readAll()),
                  QString("[Desktop Entry]\n"
                          "Type=Application\n"
-                         "Name=DeepSwitch Agent\n"
-                         "Exec=deepswitch-agent\n"
+                         "Name=Oops Jump Agent\n"
+                         "Exec=oops-jump-agent\n"
                          "X-GNOME-Autostart-enabled=true\n"
                          "NoDisplay=true\n"));
     }
@@ -95,8 +95,8 @@ private slots:
         QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Text));
         file.write("[Desktop Entry]\n"
                    "Type=Application\n"
-                   "Name=Custom DeepSwitch Agent\n"
-                   "Exec=deepswitch-agent --custom\n");
+                   "Name=Custom Oops Jump Agent\n"
+                   "Exec=oops-jump-agent --custom\n");
         file.close();
 
         const auto disabled = manager.disable();
@@ -118,8 +118,8 @@ private slots:
         QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Text));
         file.write("[Desktop Entry]\n"
                    "Type=Application\n"
-                   "Name=Custom DeepSwitch Agent\n"
-                   "Exec=deepswitch-agent --custom\n");
+                   "Name=Custom Oops Jump Agent\n"
+                   "Exec=oops-jump-agent --custom\n");
         file.close();
 
         const auto enabled = manager.enable();
@@ -167,18 +167,18 @@ private slots:
             ScopedConfigHome configHome(firstDir.path());
             AutostartManager manager;
             QVERIFY(manager.setEnabled(true).ok);
-            QCOMPARE(manager.autostartFilePath(), firstDir.path() + "/autostart/deepswitch-agent.desktop");
+            QCOMPARE(manager.autostartFilePath(), firstDir.path() + "/autostart/oops-jump-agent.desktop");
         }
 
         {
             ScopedConfigHome configHome(secondDir.path());
             AutostartManager manager;
             QVERIFY(!manager.isEnabled());
-            QCOMPARE(manager.autostartFilePath(), secondDir.path() + "/autostart/deepswitch-agent.desktop");
+            QCOMPARE(manager.autostartFilePath(), secondDir.path() + "/autostart/oops-jump-agent.desktop");
             QVERIFY(!QFile::exists(manager.autostartFilePath()));
         }
 
-        QVERIFY(QFile::exists(firstDir.path() + "/autostart/deepswitch-agent.desktop"));
+        QVERIFY(QFile::exists(firstDir.path() + "/autostart/oops-jump-agent.desktop"));
     }
 };
 

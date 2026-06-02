@@ -3,7 +3,7 @@
 #include "ipc/AgentDBusClient.h"
 #include "ipc/AgentDBusContract.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class FakeTransport : public AgentDBusTransport {
 public:
@@ -36,9 +36,9 @@ class AgentDBusClientTest : public QObject {
 private slots:
     void usesAgentFreeContractConstants()
     {
-        QCOMPARE(QString(AgentDBusContract::ServiceName), QString("org.deepin.DeepSwitch"));
-        QCOMPARE(QString(AgentDBusContract::ObjectPath), QString("/org/deepin/DeepSwitch"));
-        QCOMPARE(QString(AgentDBusContract::InterfaceName), QString("org.deepin.DeepSwitch.Agent"));
+        QCOMPARE(QString(AgentDBusContract::ServiceName), QString("org.oops.Jump"));
+        QCOMPARE(QString(AgentDBusContract::ObjectPath), QString("/org/oops/Jump"));
+        QCOMPARE(QString(AgentDBusContract::InterfaceName), QString("org.oops.Jump.Agent"));
     }
 
     void unavailableAgentReturnsAgentUnavailable()

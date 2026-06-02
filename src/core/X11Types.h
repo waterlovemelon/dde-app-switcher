@@ -1,6 +1,6 @@
 #pragma once
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct X11KeyRegistration {
     int keycode = 0;

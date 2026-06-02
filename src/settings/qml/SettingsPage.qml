@@ -46,7 +46,7 @@ Flickable {
 
                 Text {
                     Layout.fillWidth: true
-                    text: qsTr("登录时自动启动 DeepSwitch 后台服务")
+                    text: qsTr("登录时自动启动 Oops Jump 后台服务")
                     color: "#999999"
                     font.pixelSize: 12
                     wrapMode: Text.WordWrap

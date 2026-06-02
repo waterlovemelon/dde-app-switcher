@@ -3,7 +3,7 @@
 #include <QQuickImageProvider>
 #include <QIcon>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class IconProvider : public QQuickImageProvider {
 public:

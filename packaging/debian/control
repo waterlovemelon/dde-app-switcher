@@ -1,7 +1,7 @@
-Source: cn.org.oops.deepswitch
+Source: cn.org.oops.oops-jump
 Section: x11
 Priority: optional
-Maintainer: DeepSwitch Developers <deepswitch@example.invalid>
+Maintainer: Oops Jump Developers <oops-jump@example.invalid>
 Build-Depends:
  debhelper-compat (= 13),
  cmake,
@@ -14,9 +14,9 @@ Build-Depends:
  libx11-dev
 Standards-Version: 4.7.0
 Rules-Requires-Root: no
-Homepage: https://github.com/deepin-community/deepswitch
+Homepage: https://github.com/deepin-community/oops-jump
 
-Package: cn.org.oops.deepswitch
+Package: cn.org.oops.oops-jump
 Architecture: any
 Depends:
  ${misc:Depends},
@@ -29,7 +29,7 @@ Depends:
  libqt6dbus6,
  libx11-6
 Description: Keyboard-first app switcher for deepin
- DeepSwitch maps global hotkeys to desktop applications, launching missing
+ Oops Jump maps global hotkeys to desktop applications, launching missing
  apps and focusing or cycling existing windows. It runs as a user-session
  application and exposes a Qt Quick settings UI; it is not a system daemon.
  .

@@ -10,7 +10,7 @@
 #include <QVariantList>
 #include <QVariantMap>
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct BindingDto {
     QString id;

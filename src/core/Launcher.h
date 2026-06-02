@@ -3,7 +3,7 @@
 #include "core/AppInfo.h"
 #include "core/Result.h"
 
-namespace deepswitch {
+namespace oopsjump {
 
 class Launcher {
 public:

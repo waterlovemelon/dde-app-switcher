@@ -6,7 +6,7 @@
 #include <QStringList>
 #include <optional>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class AppRegistry {
 public:

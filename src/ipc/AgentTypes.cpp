@@ -1,6 +1,6 @@
 #include "ipc/AgentTypes.h"
 
-namespace deepswitch {
+namespace oopsjump {
 namespace {
 
 QVariantMap matchRuleToVariantMap(const MatchRule& rule)

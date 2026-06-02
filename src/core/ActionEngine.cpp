@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace deepswitch {
+namespace oopsjump {
 namespace {
 
 QList<WindowInfo> windowsByActivationOrder(QList<WindowInfo> windows)

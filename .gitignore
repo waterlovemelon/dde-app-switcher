@@ -63,3 +63,15 @@ compile_commands.json
 *.debhelper-build-stamp
 *.substvars
 debhelper-build-stamp
+packaging/debian/.debhelper/
+packaging/debian/tmp/
+packaging/debian/files
+packaging/debian/cn.org.oops.oops-jump/
+packaging/debian/deepswitch/
+
+# Claude Code
+.claude/
+.playwright-mcp/
+
+# Design mockups
+docs/mockup-*

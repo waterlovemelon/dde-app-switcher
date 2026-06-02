@@ -8,7 +8,7 @@
 
 #include <utility>
 
-namespace deepswitch {
+namespace oopsjump {
 namespace {
 
 // D-Bus arrays/maps arrive as QDBusArgument, not QVariantList/QVariantMap.
@@ -279,7 +279,7 @@ AgentCallResult AgentDBusClient::operationResult(const AgentCallResult& result) 
 
 AgentCallResult AgentDBusClient::unavailableResult() const
 {
-    return AgentCallResult::failure("agent_unavailable", "DeepSwitch agent is unavailable.");
+    return AgentCallResult::failure("agent_unavailable", "Oops Jump agent is unavailable.");
 }
 
 }

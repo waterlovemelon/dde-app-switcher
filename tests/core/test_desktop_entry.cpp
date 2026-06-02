@@ -2,7 +2,7 @@
 #include "core/DesktopEntry.h"
 #include "core/AppRegistry.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class DesktopEntryTest : public QObject {
     Q_OBJECT

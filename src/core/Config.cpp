@@ -1,6 +1,6 @@
 #include "core/Config.h"
 
-namespace deepswitch {
+namespace oopsjump {
 
 Config Config::defaults()
 {

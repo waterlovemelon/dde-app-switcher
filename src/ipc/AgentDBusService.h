@@ -7,13 +7,13 @@
 #include <QVariantList>
 #include <QVariantMap>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class AgentController;
 
 class AgentDBusService : public QObject {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.deepin.DeepSwitch.Agent")
+    Q_CLASSINFO("D-Bus Interface", "org.oops.Jump.Agent")
 
 public:
     static constexpr const char* ServiceName = AgentDBusContract::ServiceName;

@@ -2,7 +2,7 @@
 #include "core/Config.h"
 #include "ipc/AgentTypes.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class AgentTypesTest : public QObject {
     Q_OBJECT

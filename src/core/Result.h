@@ -3,7 +3,7 @@
 #include <QString>
 #include <utility>
 
-namespace deepswitch {
+namespace oopsjump {
 
 template <typename T>
 struct Result {

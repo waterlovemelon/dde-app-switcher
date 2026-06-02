@@ -1,10 +1,10 @@
-# DeepSwitch M2-M4 Implementation Plan
+# Oops Jump M2-M4 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 在 M0/M1 已完成的命令行原型基础上，交付可视化设置、日常使用质量、安装打包，以及 Wayland/Treeland 能力边界验证。
 
-**Architecture:** 后续版本应先把 `deepswitch-agent` 从 CLI 主循环拆成可复用的服务对象，再通过 D-Bus 暴露状态、配置和触发能力；Settings UI 只作为 D-Bus 客户端，不直接改写 agent 正在使用的配置。M3 在 M2 的 IPC 和状态模型上增加 autostart、overlay、日志轮转、打包；M4 不承诺完整 Wayland 窗口控制，先做能力探测和有限降级后端。
+**Architecture:** 后续版本应先把 `oops-jump-agent` 从 CLI 主循环拆成可复用的服务对象，再通过 D-Bus 暴露状态、配置和触发能力；Settings UI 只作为 D-Bus 客户端，不直接改写 agent 正在使用的配置。M3 在 M2 的 IPC 和状态模型上增加 autostart、overlay、日志轮转、打包；M4 不承诺完整 Wayland 窗口控制，先做能力探测和有限降级后端。
 
 **Tech Stack:** C++20, CMake, Qt 6 Core/Gui/Test/DBus/Qml/Quick/QuickControls2, X11, Qt Test, Debian packaging.
 
@@ -14,9 +14,9 @@
 
 当前仓库已有：
 
-- `deepswitch_core`：配置、`.desktop` 解析、应用匹配、动作决策、启动逻辑。
-- `deepswitch_x11`：X11 连接、全局快捷键、窗口枚举和激活。
-- `deepswitch-agent`：CLI 命令和默认 hotkey loop。
+- `oopsjump_core`：配置、`.desktop` 解析、应用匹配、动作决策、启动逻辑。
+- `oopsjump_x11`：X11 连接、全局快捷键、窗口枚举和激活。
+- `oops-jump-agent`：CLI 命令和默认 hotkey loop。
 - `tests/core`：核心逻辑单元测试。
 
 当前缺口：
@@ -36,7 +36,7 @@
 
 - 新增 D-Bus service/client。
 - 拆出 `AgentController` 管理配置、注册快捷键、应用扫描、动作触发和状态聚合。
-- 新增 `deepswitch-settings` Qt/QML 应用。
+- 新增 `oops-jump-settings` Qt/QML 应用。
 - 支持绑定列表、应用选择、快捷键录制、多窗口策略、后端状态、保存配置、reload。
 
 不做：
@@ -47,8 +47,8 @@
 
 验收标准：
 
-- `deepswitch-agent` 启动后注册 `org.deepin.DeepSwitch` session bus name。
-- `deepswitch-settings` 能列出 bindings 和 applications。
+- `oops-jump-agent` 启动后注册 `cn.org.oops.oops_jump` session bus name。
+- `oops-jump-settings` 能列出 bindings 和 applications。
 - UI 能新增、编辑、禁用、删除绑定。
 - UI 保存后 agent 在 500ms 内 reload 或局部更新快捷键。
 - 快捷键冲突、无效 hotkey、应用不存在能在 UI 中显示明确状态。
@@ -75,11 +75,11 @@
 
 验收标准：
 
-- 安装 deb 后 `deepswitch-agent` 可在登录后自动启动。
-- `deepswitch-settings` 可从桌面启动器打开。
+- 安装 deb 后 `oops-jump-agent` 可在登录后自动启动。
+- `oops-jump-settings` 可从桌面启动器打开。
 - 触发快捷键时已有窗口聚焦通常 < 200ms，动作决策通常 < 50ms。
 - 日志文件超过限制后轮转，不无限增长。
-- 卸载不删除 `~/.config/deepswitch/config.json`。
+- 卸载不删除 `~/.config/oops-jump/config.json`。
 
 ### M4: Wayland/Treeland Research + Limited Backend
 
@@ -150,10 +150,10 @@
 - Create: `packaging/debian/rules`
 - Create: `packaging/debian/changelog`
 - Create: `packaging/debian/copyright`
-- Create: `packaging/debian/deepswitch.install`
-- Create: `packaging/linux/org.deepin.DeepSwitch.desktop`
-- Create: `packaging/linux/deepswitch-agent.desktop`
-- Create: `packaging/linux/icons/hicolor/scalable/apps/deepswitch.svg`
+- Create: `packaging/debian/oops-jump.install`
+- Create: `packaging/linux/cn.org.oops.oops_jump.desktop`
+- Create: `packaging/linux/oops-jump-agent.desktop`
+- Create: `packaging/linux/icons/hicolor/scalable/apps/oops-jump.svg`
 - Create: `docs/manual-test-matrix.md`
 - Create: `tests/core/test_autostart_manager.cpp`
 - Create: `tests/core/test_log_file_manager.cpp`
@@ -242,8 +242,8 @@ error
 - Modify: `CMakeLists.txt`
 
 - [ ] Add `find_package(Qt6 REQUIRED COMPONENTS Core Test Gui DBus)`.
-- [ ] Register service name `org.deepin.DeepSwitch`.
-- [ ] Register object path `/org/deepin/DeepSwitch`.
+- [ ] Register service name `cn.org.oops.oops_jump`.
+- [ ] Register object path `/cn/org/oops/oops_jump`.
 - [ ] Expose interface methods using Qt slots:
   `GetStatus`, `ReloadConfig`, `Pause`, `Resume`, `ListBindings`, `SetBinding`, `RemoveBinding`, `TestHotkey`, `ListApplications`, `ListWindows`, `ActivateWindow`, `LaunchApp`.
 - [ ] Emit `StatusChanged`, `HotkeyTriggered`, `BindingChanged`, `BackendChanged`, `WindowListChanged`, `ErrorOccurred`.
@@ -253,9 +253,9 @@ error
 D-Bus contract:
 
 ```text
-Service: org.deepin.DeepSwitch
-Object: /org/deepin/DeepSwitch
-Interface: org.deepin.DeepSwitch.Agent
+Service: cn.org.oops.oops_jump
+Object: /cn/org/oops/oops_jump
+Interface: cn.org.oops.oops_jump.Agent
 ```
 
 ### Task M2.4: Add Settings D-Bus Client
@@ -284,7 +284,7 @@ Interface: org.deepin.DeepSwitch.Agent
 - Create: `src/settings/qml/qml.qrc`
 - Modify: `CMakeLists.txt`
 
-- [ ] Add executable `deepswitch-settings`.
+- [ ] Add executable `oops-jump-settings`.
 - [ ] Link `Qt6::Core`, `Qt6::Gui`, `Qt6::Qml`, `Qt6::Quick`, `Qt6::QuickControls2`, `Qt6::DBus`.
 - [ ] Load `qrc:/qml/Main.qml`.
 - [ ] Add pages: bindings, applications, backend status, about.
@@ -357,9 +357,9 @@ Interface: org.deepin.DeepSwitch.Agent
 - [ ] Run `cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`.
 - [ ] Run `cmake --build build`.
 - [ ] Run `ctest --test-dir build --output-on-failure`.
-- [ ] Start `build/deepswitch-agent --config /tmp/deepswitch-m2.json`.
-- [ ] Confirm `qdbus org.deepin.DeepSwitch /org/deepin/DeepSwitch org.deepin.DeepSwitch.Agent.GetStatus` returns a status map.
-- [ ] Start `build/deepswitch-settings`.
+- [ ] Start `build/oops-jump-agent --config /tmp/oops-jump-m2.json`.
+- [ ] Confirm `qdbus cn.org.oops.oops_jump /cn/org/oops/oops_jump cn.org.oops.oops_jump.Agent.GetStatus` returns a status map.
+- [ ] Start `build/oops-jump-settings`.
 - [ ] Create bindings for Firefox, Terminal, VS Code.
 - [ ] Confirm pressing configured hotkeys launches or focuses each app.
 - [ ] Confirm editing a hotkey takes effect without restarting agent.
@@ -378,7 +378,7 @@ Interface: org.deepin.DeepSwitch.Agent
 - Modify: `src/agent/AgentController.cpp`
 - Modify: `src/settings/qml/Main.qml`
 
-- [ ] Implement writes to `~/.config/autostart/deepswitch-agent.desktop`.
+- [ ] Implement writes to `~/.config/autostart/oops-jump-agent.desktop`.
 - [ ] Never write system autostart paths.
 - [ ] Preserve user config on disable by removing only the generated autostart file.
 - [ ] Add tests using a temporary config home.
@@ -389,8 +389,8 @@ Autostart desktop entry:
 ```ini
 [Desktop Entry]
 Type=Application
-Name=DeepSwitch Agent
-Exec=deepswitch-agent
+Name=Oops Jump Agent
+Exec=oops-jump-agent
 X-GNOME-Autostart-enabled=true
 NoDisplay=true
 ```
@@ -399,11 +399,11 @@ NoDisplay=true
 
 **Files:**
 
-- Create: `packaging/linux/org.deepin.DeepSwitch.desktop`
-- Create: `packaging/linux/icons/hicolor/scalable/apps/deepswitch.svg`
+- Create: `packaging/linux/cn.org.oops.oops_jump.desktop`
+- Create: `packaging/linux/icons/hicolor/scalable/apps/oops-jump.svg`
 - Modify: `CMakeLists.txt`
 
-- [ ] Install a visible desktop entry for `deepswitch-settings`.
+- [ ] Install a visible desktop entry for `oops-jump-settings`.
 - [ ] Install icon under hicolor scalable apps.
 - [ ] Ensure the settings app has a stable application id.
 - [ ] Confirm it appears in launcher search after installation.
@@ -451,8 +451,8 @@ NoDisplay=true
 - Create: `tests/core/test_log_file_manager.cpp`
 - Modify: `src/agent/main.cpp`
 
-- [ ] Write logs to `~/.local/state/deepswitch/deepswitch.log`.
-- [ ] Rotate to `deepswitch.log.1` when file exceeds configured size.
+- [ ] Write logs to `~/.local/state/oops-jump/oops-jump.log`.
+- [ ] Rotate to `oops-jump.log.1` when file exceeds configured size.
 - [ ] Default max size: 2 MiB.
 - [ ] Keep console logging for CLI one-shot commands.
 - [ ] Do not log full environment or sensitive command arguments.
@@ -465,10 +465,10 @@ NoDisplay=true
 - Create: `packaging/debian/rules`
 - Create: `packaging/debian/changelog`
 - Create: `packaging/debian/copyright`
-- Create: `packaging/debian/deepswitch.install`
+- Create: `packaging/debian/oops-jump.install`
 - Modify: `CMakeLists.txt`
 
-- [ ] Add install rules for `deepswitch-agent`, `deepswitch-settings`, desktop files, icon, docs.
+- [ ] Add install rules for `oops-jump-agent`, `oops-jump-settings`, desktop files, icon, docs.
 - [ ] Package as user-session application, not system daemon.
 - [ ] Declare runtime dependencies for Qt6 Core/Gui/Qml/Quick/DBus and X11.
 - [ ] Build package with `dpkg-buildpackage -us -uc` or CPack Debian if the team chooses CPack.
@@ -496,7 +496,7 @@ NoDisplay=true
 - [ ] Log out and log in.
 - [ ] Confirm hotkeys work before opening Settings.
 - [ ] Confirm log rotation by lowering max size in a test config and generating events.
-- [ ] Confirm uninstall leaves `~/.config/deepswitch/config.json` untouched.
+- [ ] Confirm uninstall leaves `~/.config/oops-jump/config.json` untouched.
 
 ---
 
@@ -626,9 +626,9 @@ ctest --test-dir build --output-on-failure
 M2 adds manual verification:
 
 ```bash
-build/deepswitch-agent --config /tmp/deepswitch-m2.json
-qdbus org.deepin.DeepSwitch /org/deepin/DeepSwitch org.deepin.DeepSwitch.Agent.GetStatus
-build/deepswitch-settings
+build/oops-jump-agent --config /tmp/oops-jump-m2.json
+qdbus cn.org.oops.oops_jump /cn/org/oops/oops_jump cn.org.oops.oops_jump.Agent.GetStatus
+build/oops-jump-settings
 ```
 
 M3 adds packaging verification:

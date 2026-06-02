@@ -5,7 +5,7 @@
 #include "backends/x11/X11Connection.h"
 #include <QList>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class X11WindowBackend {
 public:

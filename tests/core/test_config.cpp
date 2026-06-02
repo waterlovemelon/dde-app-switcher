@@ -5,7 +5,7 @@
 #include <QDir>
 #include <QTemporaryDir>
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class ConfigTest : public QObject {
     Q_OBJECT

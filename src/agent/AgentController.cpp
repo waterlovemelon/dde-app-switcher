@@ -17,7 +17,7 @@
 #include <QSet>
 #include <QVariant>
 
-namespace deepswitch {
+namespace oopsjump {
 namespace {
 
 bool isActiveState(AgentControllerState state)
@@ -482,7 +482,7 @@ VoidResult AgentController::testHotkey(const QString& hotkey, const QString& exc
     }
 
     X11HotkeyBackend hotkeys(connection);
-    const auto registered = hotkeys.registerHotkey(parsed.value, "__deepswitch_test__");
+    const auto registered = hotkeys.registerHotkey(parsed.value, "__oopsjump_test__");
     if (!registered.ok) {
         return registered;
     }

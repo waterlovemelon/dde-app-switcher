@@ -14,7 +14,7 @@
 #include <QTemporaryDir>
 #include <QUuid>
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class AgentDBusServiceTest : public QObject {
     Q_OBJECT
@@ -33,7 +33,7 @@ private slots:
         }
         QVERIFY(foundInterface);
         QCOMPARE(QString(AgentDBusService::InterfaceName), QString(AgentDBusContract::InterfaceName));
-        QCOMPARE(QString(AgentDBusContract::InterfaceName), QString("org.deepin.DeepSwitch.Agent"));
+        QCOMPARE(QString(AgentDBusContract::InterfaceName), QString("org.oops.Jump.Agent"));
     }
 
     void exposesStatusAndControllerBackedLists()
@@ -184,8 +184,8 @@ private slots:
         }
 
         const QString suffix = "t" + QUuid::createUuid().toString(QUuid::WithoutBraces).replace('-', '_');
-        const QString serviceName = "org.deepin.DeepSwitch.Test." + suffix;
-        const QString objectPath = "/org/deepin/DeepSwitch/Test/" + suffix;
+        const QString serviceName = "org.deepin.OopsJump.Test." + suffix;
+        const QString objectPath = "/org/deepin/OopsJump/Test/" + suffix;
         if (!bus.registerService(serviceName)) {
             QSKIP(qPrintable("cannot register temporary service: " + bus.lastError().message()));
         }

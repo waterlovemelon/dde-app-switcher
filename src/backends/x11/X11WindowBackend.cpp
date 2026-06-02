@@ -7,7 +7,7 @@
 #include <X11/Xutil.h>
 #include <cstring>
 
-namespace deepswitch {
+namespace oopsjump {
 namespace {
 
 QList<WindowId> s_recentActiveWindows;

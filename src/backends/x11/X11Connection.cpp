@@ -1,6 +1,6 @@
 #include "backends/x11/X11Connection.h"
 
-namespace deepswitch {
+namespace oopsjump {
 
 X11Connection::X11Connection() = default;
 

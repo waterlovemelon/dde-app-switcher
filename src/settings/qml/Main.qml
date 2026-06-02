@@ -10,7 +10,7 @@ ApplicationWindow {
     minimumWidth: 640
     minimumHeight: 480
     visible: true
-    title: qsTr("DeepSwitch Settings")
+    title: qsTr("Oops Jump Settings")
     color: "#f5f6f8"
 
     property int selectedPage: 0
@@ -36,7 +36,7 @@ ApplicationWindow {
                 spacing: 12
 
                 Text {
-                    text: qsTr("DeepSwitch")
+                    text: qsTr("Oops Jump")
                     color: "#1a1a1a"
                     font.pixelSize: 17
                     font.weight: Font.DemiBold

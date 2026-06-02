@@ -1,6 +1,6 @@
 #include "core/AppMatcher.h"
 
-namespace deepswitch {
+namespace oopsjump {
 
 static bool equalsIgnoreCase(const QString& left, const QString& right)
 {

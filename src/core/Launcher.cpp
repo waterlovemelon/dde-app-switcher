@@ -2,7 +2,7 @@
 
 #include <QProcess>
 
-namespace deepswitch {
+namespace oopsjump {
 
 VoidResult Launcher::launch(const AppInfo& app)
 {

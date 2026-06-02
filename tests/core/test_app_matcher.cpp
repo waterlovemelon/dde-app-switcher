@@ -1,7 +1,7 @@
 #include <QtTest/QtTest>
 #include "core/AppMatcher.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class AppMatcherTest : public QObject {
     Q_OBJECT

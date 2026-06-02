@@ -8,7 +8,7 @@
 #include <QUrl>
 #include <utility>
 
-namespace deepswitch {
+namespace oopsjump {
 
 static constexpr int kSlotWidth = 108;
 static constexpr int kPaddingH = 40;

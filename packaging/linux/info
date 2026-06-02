@@ -1,6 +1,6 @@
 {
-    "appid": "cn.org.oops.deepswitch",
-    "name": "DeepSwitch",
+    "appid": "cn.org.oops.oops-jump",
+    "name": "Oops Jump",
     "version": "0.1.0",
     "arch": ["amd64"],
     "permissions": {

@@ -15,7 +15,7 @@
 #include <functional>
 #include <optional>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class X11HotkeyBackend;
 

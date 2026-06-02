@@ -1,7 +1,7 @@
 #include <QtTest/QtTest>
 #include "core/ActionEngine.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class ActionEngineTest : public QObject {
     Q_OBJECT

@@ -4,8 +4,8 @@
 <context>
     <name>Main</name>
     <message>
-        <source>DeepSwitch Settings</source>
-        <translation>DeepSwitch 设置</translation>
+        <source>Oops Jump Settings</source>
+        <translation>Oops Jump 设置</translation>
     </message>
     <message>
         <source>Bindings</source>
@@ -36,12 +36,12 @@
         <translation>关于</translation>
     </message>
     <message>
-        <source>DeepSwitch desktop utility.</source>
-        <translation>DeepSwitch 桌面工具。</translation>
+        <source>Oops Jump desktop utility.</source>
+        <translation>Oops Jump 桌面工具。</translation>
     </message>
     <message>
-        <source>DeepSwitch</source>
-        <translation>DeepSwitch</translation>
+        <source>Oops Jump</source>
+        <translation>Oops Jump</translation>
     </message>
     <message>
         <source>Application switcher</source>

@@ -4,7 +4,7 @@
 
 #include <utility>
 
-namespace deepswitch {
+namespace oopsjump {
 
 namespace {
 
@@ -380,7 +380,7 @@ bool SettingsController::ensureAvailable()
     const bool available = m_client && m_client->isAvailable();
     setConnected(available);
     if (!available) {
-        setLastError("DeepSwitch agent is unavailable.");
+        setLastError("Oops Jump agent is unavailable.");
         setLastErrorCode("agent_unavailable");
     }
     return available;

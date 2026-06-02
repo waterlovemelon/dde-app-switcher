@@ -3,7 +3,7 @@
 #include <QString>
 #include <QStringList>
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct AppInfo {
     QString desktopId;

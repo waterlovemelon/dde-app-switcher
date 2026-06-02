@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-DeepSwitch — keyboard-first app switcher for deepin v25, inspired by macOS Manico. One hotkey → one app. Press hotkey to launch (if not running) or focus (if running). Multi-window cycling supported.
+Oops Jump — keyboard-first app switcher for deepin v25, inspired by macOS Manico. One hotkey → one app. Press hotkey to launch (if not running) or focus (if running). Multi-window cycling supported.
 
 **Status:** Pre-implementation. Repository contains design docs only — no source code, build files, or tests yet.
 
@@ -50,13 +50,13 @@ tests/
 **Boundary rules:**
 - `src/core/` must NOT include X11 headers
 - `src/backends/x11/` is the ONLY place that includes `<X11/Xlib.h>`, `<X11/Xatom.h>`
-- Tests target `deepswitch_core`, not the agent executable
+- Tests target `oopsjump_core`, not the agent executable
 - Backend interfaces (`HotkeyBackend`, `WindowBackend`) allow swapping X11 → Wayland/Treeland later
 
 ## Process Model
 
-- `deepswitch-agent` — background daemon, owns core state, handles hotkeys
-- `deepswitch-settings` — config UI, communicates with agent via D-Bus (M2+)
+- `oops-jump-agent` — background daemon, owns core state, handles hotkeys
+- `oops-jump-settings` — config UI, communicates with agent via D-Bus (M2+)
 - Agent uses single-threaded Qt event loop; slow I/O (desktop scan, icon load) offloaded to workers
 
 ## Key Design Documents
@@ -75,10 +75,10 @@ tests/
 ## Runtime Paths
 
 ```
-~/.config/deepswitch/config.json          # User config
-~/.local/share/deepswitch/state.db        # State (optional, post-MVP)
-~/.local/state/deepswitch/deepswitch.log  # Log
-~/.config/autostart/deepswitch-agent.desktop  # Autostart
+~/.config/oops-jump/config.json          # User config
+~/.local/share/oops-jump/state.db        # State (optional, post-MVP)
+~/.local/state/oops-jump/oops-jump.log  # Log
+~/.config/autostart/oops-jump-agent.desktop  # Autostart
 ```
 
 ## Language

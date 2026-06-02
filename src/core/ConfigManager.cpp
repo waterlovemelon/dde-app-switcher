@@ -12,9 +12,9 @@
 #include <QStandardPaths>
 #include <utility>
 
-Q_LOGGING_CATEGORY(lcConfig, "deepswitch.config")
+Q_LOGGING_CATEGORY(lcConfig, "oops-jump.config")
 
-namespace deepswitch {
+namespace oopsjump {
 
 ConfigManager::ConfigManager(QString path)
     : m_path(std::move(path))
@@ -24,7 +24,20 @@ ConfigManager::ConfigManager(QString path)
 QString ConfigManager::defaultConfigPath()
 {
     const QString configHome = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
-    return QDir(configHome).filePath("deepswitch/config.json");
+    const QString newPath = QDir(configHome).filePath("oops-jump/config.json");
+
+    // Migrate from old "deepswitch" config directory if the new path doesn't exist yet.
+    if (!QFileInfo::exists(newPath)) {
+        const QString oldPath = QDir(configHome).filePath("deepswitch/config.json");
+        if (QFileInfo::exists(oldPath)) {
+            QDir().mkpath(QFileInfo(newPath).absolutePath());
+            if (QFile::copy(oldPath, newPath)) {
+                qCInfo(lcConfig) << "Migrated config from" << oldPath << "to" << newPath;
+            }
+        }
+    }
+
+    return newPath;
 }
 
 static MatchRule matchRuleFromJson(const QJsonObject& object)

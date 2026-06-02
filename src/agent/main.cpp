@@ -24,13 +24,13 @@
 
 #include <optional>
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 namespace {
 
 bool launchOverlayBar(AgentController& controller, const QString& activeActionId)
 {
-    const QString executable = QCoreApplication::applicationDirPath() + QDir::separator() + QStringLiteral("deepswitch-overlay");
+    const QString executable = QCoreApplication::applicationDirPath() + QDir::separator() + QStringLiteral("oops-jump-overlay");
     const QFileInfo overlayInfo(executable);
     if (!overlayInfo.exists() || !overlayInfo.isExecutable()) {
         return false;
@@ -70,11 +70,11 @@ bool launchOverlayBar(AgentController& controller, const QString& activeActionId
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    QCoreApplication::setApplicationName("deepswitch-agent");
+    QCoreApplication::setApplicationName("oops-jump-agent");
     QCoreApplication::setApplicationVersion("0.1.0");
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("DeepSwitch command-line agent");
+    parser.setApplicationDescription("Oops Jump command-line agent");
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption({ "validate-config", "Validate the config file and exit." });
@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
             }
             overlayProcess = new QProcess;
             const QString executable = QCoreApplication::applicationDirPath()
-                + QDir::separator() + QStringLiteral("deepswitch-overlay");
+                + QDir::separator() + QStringLiteral("oops-jump-overlay");
             QVariantList apps = controller.resolveOverlayApps();
             QJsonArray arr;
             for (const auto& entry : apps) {

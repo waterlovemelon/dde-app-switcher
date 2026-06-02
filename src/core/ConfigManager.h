@@ -4,7 +4,7 @@
 #include "core/Result.h"
 #include <QString>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class ConfigManager {
 public:

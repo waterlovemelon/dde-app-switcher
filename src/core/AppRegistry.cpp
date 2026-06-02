@@ -4,7 +4,7 @@
 #include <QDir>
 #include <QSet>
 
-namespace deepswitch {
+namespace oopsjump {
 
 void AppRegistry::setApplicationDirs(QStringList dirs)
 {

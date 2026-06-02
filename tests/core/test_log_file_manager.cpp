@@ -9,7 +9,7 @@
 
 #include <atomic>
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 namespace {
 
@@ -80,8 +80,8 @@ private slots:
 
         LogFileManager manager;
 
-        QCOMPARE(manager.logFilePath(), dir.path() + "/deepswitch/deepswitch.log");
-        QCOMPARE(manager.rotatedLogFilePath(), dir.path() + "/deepswitch/deepswitch.log.1");
+        QCOMPARE(manager.logFilePath(), dir.path() + "/oops-jump/oops-jump.log");
+        QCOMPARE(manager.rotatedLogFilePath(), dir.path() + "/oops-jump/oops-jump.log.1");
     }
 
     void installCreatesStateDirectoryAndLogFile()
@@ -93,7 +93,7 @@ private slots:
         const auto installed = manager.install();
         QVERIFY2(installed.ok, qPrintable(installed.message));
 
-        QVERIFY(QDir(dir.path() + "/deepswitch").exists());
+        QVERIFY(QDir(dir.path() + "/oops-jump").exists());
         QVERIFY(QFile::exists(manager.logFilePath()));
     }
 
@@ -102,9 +102,9 @@ private slots:
         QTemporaryDir dir;
         QVERIFY(dir.isValid());
 
-        const QString logDir = dir.path() + "/deepswitch";
+        const QString logDir = dir.path() + "/oops-jump";
         QVERIFY(QDir().mkpath(logDir));
-        QFile existing(logDir + "/deepswitch.log");
+        QFile existing(logDir + "/oops-jump.log");
         QVERIFY(existing.open(QIODevice::WriteOnly));
         existing.write(QByteArray(20, 'x'));
         existing.close();
@@ -153,24 +153,24 @@ private slots:
     void oneShotCommandPolicyDoesNotNeedSensitiveArgumentContents()
     {
         QStringList triggerArgs {
-            "deepswitch-agent",
+            "oops-jump-agent",
             "--trigger",
             "secret-token-should-not-be-logged",
         };
         QStringList configArgs {
-            "deepswitch-agent",
+            "oops-jump-agent",
             "--config",
             "/sensitive/path/config.json",
         };
         QStringList inlineConfigArgs {
-            "deepswitch-agent",
+            "oops-jump-agent",
             "--config=/sensitive/path/config.json",
         };
 
         QVERIFY(!LogFileManager::shouldUseFileLogging(triggerArgs));
         QVERIFY(LogFileManager::shouldUseFileLogging(configArgs));
         QVERIFY(LogFileManager::shouldUseFileLogging(inlineConfigArgs));
-        QVERIFY(LogFileManager::shouldUseFileLogging({ "deepswitch-agent" }));
+        QVERIFY(LogFileManager::shouldUseFileLogging({ "oops-jump-agent" }));
     }
 
     void installChainsAndRestoresPreviousMessageHandler()

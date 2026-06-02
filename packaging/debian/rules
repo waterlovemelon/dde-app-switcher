@@ -8,7 +8,7 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 override_dh_auto_configure:
 	dh_auto_configure -- \
 		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
-		-DCMAKE_INSTALL_PREFIX=/opt/apps/cn.org.oops.deepswitch
+		-DCMAKE_INSTALL_PREFIX=/opt/apps/cn.org.oops.oops-jump
 
 override_dh_auto_install:
 	dh_auto_install --destdir=debian/tmp

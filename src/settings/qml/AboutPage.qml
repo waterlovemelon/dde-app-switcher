@@ -75,7 +75,7 @@ Flickable {
 
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "DeepSwitch"
+                    text: "Oops Jump"
                     color: "#1a1a1a"
                     font.pixelSize: 20
                     font.weight: Font.Bold

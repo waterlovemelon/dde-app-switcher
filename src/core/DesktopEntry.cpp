@@ -6,7 +6,7 @@
 #include <QMap>
 #include <QTextStream>
 
-namespace deepswitch {
+namespace oopsjump {
 
 static bool parseBool(const QString& value)
 {

@@ -9,7 +9,7 @@
 
 #include <memory>
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct AgentCallResult {
     bool ok = false;

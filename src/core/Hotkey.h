@@ -4,7 +4,7 @@
 #include <QString>
 #include <QStringList>
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct Hotkey {
     QString sequence;

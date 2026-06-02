@@ -5,7 +5,7 @@
 #include <QVariantList>
 #include <QQuickWindow>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class OverlayWindow : public QObject {
     Q_OBJECT

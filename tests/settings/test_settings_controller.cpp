@@ -7,7 +7,7 @@
 #include <QFile>
 #include <QTemporaryDir>
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class FakeAgentClient : public AgentClientInterface {
     Q_OBJECT
@@ -139,14 +139,14 @@ private slots:
 
         FakeAgentClient client;
         client.available = false;
-        const QString configPath = configHome.path() + "/deepswitch/config.json";
+        const QString configPath = configHome.path() + "/oops-jump/config.json";
         SettingsController controller(client, configPath);
         QSignalSpy autostartChanged(&controller, &SettingsController::autostartEnabledChanged);
 
         QCOMPARE(controller.autostartEnabled(), false);
         QCOMPARE(controller.setAutostartEnabled(true), true);
         QCOMPARE(controller.autostartEnabled(), true);
-        QVERIFY(QFile::exists(configHome.path() + "/autostart/deepswitch-agent.desktop"));
+        QVERIFY(QFile::exists(configHome.path() + "/autostart/oops-jump-agent.desktop"));
         const auto enabledConfig = ConfigManager(configPath).load();
         QVERIFY(enabledConfig.ok);
         QCOMPARE(enabledConfig.value.general.autostart, true);
@@ -154,7 +154,7 @@ private slots:
 
         QCOMPARE(controller.setAutostartEnabled(false), true);
         QCOMPARE(controller.autostartEnabled(), false);
-        QVERIFY(!QFile::exists(configHome.path() + "/autostart/deepswitch-agent.desktop"));
+        QVERIFY(!QFile::exists(configHome.path() + "/autostart/oops-jump-agent.desktop"));
         const auto disabledConfig = ConfigManager(configPath).load();
         QVERIFY(disabledConfig.ok);
         QCOMPARE(disabledConfig.value.general.autostart, false);
@@ -176,7 +176,7 @@ private slots:
         const bool hadConfigHome = qEnvironmentVariableIsSet("XDG_CONFIG_HOME");
         qputenv("XDG_CONFIG_HOME", configHome.path().toUtf8());
 
-        const QString configPath = configHome.path() + "/deepswitch/config.json";
+        const QString configPath = configHome.path() + "/oops-jump/config.json";
         Config config = Config::defaults();
         config.general.autostart = true;
         QVERIFY(ConfigManager(configPath).save(config).ok);
@@ -202,15 +202,15 @@ private slots:
         qputenv("XDG_CONFIG_HOME", configHome.path().toUtf8());
 
         QVERIFY(QDir().mkpath(configHome.path() + "/autostart"));
-        QFile customAutostart(configHome.path() + "/autostart/deepswitch-agent.desktop");
+        QFile customAutostart(configHome.path() + "/autostart/oops-jump-agent.desktop");
         QVERIFY(customAutostart.open(QIODevice::WriteOnly | QIODevice::Text));
         customAutostart.write("[Desktop Entry]\n"
                               "Type=Application\n"
-                              "Name=Custom DeepSwitch Agent\n"
-                              "Exec=deepswitch-agent --custom\n");
+                              "Name=Custom Oops Jump Agent\n"
+                              "Exec=oops-jump-agent --custom\n");
         customAutostart.close();
 
-        const QString configPath = configHome.path() + "/deepswitch/config.json";
+        const QString configPath = configHome.path() + "/oops-jump/config.json";
         Config config = Config::defaults();
         config.general.autostart = false;
         QVERIFY(ConfigManager(configPath).save(config).ok);

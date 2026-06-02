@@ -8,7 +8,7 @@
 
 ## Window Listing
 
-- `./build/deepswitch-agent --list-windows` result: (record output)
+- `./build/oops-jump-agent --list-windows` result: (record output)
 - Firefox `WM_CLASS`: (record actual value)
 - Deepin Terminal `WM_CLASS`: (record actual value)
 - VS Code `WM_CLASS`: (record actual value)

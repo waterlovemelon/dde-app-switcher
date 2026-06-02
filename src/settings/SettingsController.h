@@ -12,7 +12,7 @@
 #include <functional>
 #include <memory>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class SettingsController : public QObject {
     Q_OBJECT

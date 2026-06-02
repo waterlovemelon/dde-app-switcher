@@ -5,7 +5,7 @@
 #include "core/WindowInfo.h"
 #include <QList>
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct MatchResult {
     bool matched = false;

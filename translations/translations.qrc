@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/i18n">
-        <file>deepswitch_zh_CN.qm</file>
+        <file>oops-jump_zh_CN.qm</file>
     </qresource>
 </RCC>

@@ -5,7 +5,7 @@
 
 #include <QTemporaryDir>
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class AgentControllerTest : public QObject {
     Q_OBJECT
@@ -28,7 +28,7 @@ private slots:
 
         AgentController controller(configPath, AgentController::BackendMode::Disabled);
         QVERIFY2(controller.reloadConfig().ok, qPrintable(controller.status().message));
-        QVERIFY(!QFile::exists(configHome.path() + "/autostart/deepswitch-agent.desktop"));
+        QVERIFY(!QFile::exists(configHome.path() + "/autostart/oops-jump-agent.desktop"));
 
         if (hadConfigHome) {
             qputenv("XDG_CONFIG_HOME", previousConfigHome);
@@ -55,13 +55,13 @@ private slots:
         AgentController controller(configPath, AgentController::BackendMode::Disabled);
         QVERIFY2(controller.reloadConfig().ok, qPrintable(controller.status().message));
         QVERIFY2(controller.syncAutostart().ok, qPrintable(controller.status().message));
-        QVERIFY(QFile::exists(configHome.path() + "/autostart/deepswitch-agent.desktop"));
+        QVERIFY(QFile::exists(configHome.path() + "/autostart/oops-jump-agent.desktop"));
 
         config.general.autostart = false;
         QVERIFY(ConfigManager(configPath).save(config).ok);
         QVERIFY2(controller.reloadConfig().ok, qPrintable(controller.status().message));
         QVERIFY2(controller.syncAutostart().ok, qPrintable(controller.status().message));
-        QVERIFY(!QFile::exists(configHome.path() + "/autostart/deepswitch-agent.desktop"));
+        QVERIFY(!QFile::exists(configHome.path() + "/autostart/oops-jump-agent.desktop"));
 
         if (hadConfigHome) {
             qputenv("XDG_CONFIG_HOME", previousConfigHome);

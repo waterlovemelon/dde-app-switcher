@@ -1,11 +1,11 @@
 #pragma once
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct AgentDBusContract {
-    static constexpr const char* ServiceName = "org.deepin.DeepSwitch";
-    static constexpr const char* InterfaceName = "org.deepin.DeepSwitch.Agent";
-    static constexpr const char* ObjectPath = "/org/deepin/DeepSwitch";
+    static constexpr const char* ServiceName = "org.oops.Jump";
+    static constexpr const char* InterfaceName = "org.oops.Jump.Agent";
+    static constexpr const char* ObjectPath = "/org/oops/Jump";
 };
 
 }

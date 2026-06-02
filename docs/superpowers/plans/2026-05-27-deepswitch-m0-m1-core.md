@@ -1,10 +1,10 @@
-# DeepSwitch M0-M1 Core Implementation Plan
+# Oops Jump M0-M1 Core Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the M0-M1 command-line DeepSwitch core: a testable Qt/C++20 agent that can load config, parse hotkeys, scan `.desktop` files, match X11 windows to apps, register X11 global hotkeys, and launch or focus configured applications.
+**Goal:** Build the M0-M1 command-line Oops Jump core: a testable Qt/C++20 agent that can load config, parse hotkeys, scan `.desktop` files, match X11 windows to apps, register X11 global hotkeys, and launch or focus configured applications.
 
-**Architecture:** Start with a small CMake/Qt project and isolate pure core logic from X11-specific backends. Implement unit-tested config, hotkey, desktop parsing, matching, and action decisions first; then connect those units through X11 backends and a minimal `deepswitch-agent` CLI.
+**Architecture:** Start with a small CMake/Qt project and isolate pure core logic from X11-specific backends. Implement unit-tested config, hotkey, desktop parsing, matching, and action decisions first; then connect those units through X11 backends and a minimal `oops-jump-agent` CLI.
 
 **Tech Stack:** C++20, CMake, Qt6 Core, Qt6 Test, Qt6 Gui, X11/Xlib, optional XCB only after the Xlib prototype is stable.
 
@@ -92,7 +92,7 @@ Boundary rules:
 - `src/core` must not include X11 headers.
 - `src/backends/x11` is the only place that includes `<X11/Xlib.h>` and `<X11/Xatom.h>`.
 - `src/agent/main.cpp` wires modules together and owns CLI behavior.
-- Tests target `deepswitch_core`, not the agent executable.
+- Tests target `oopsjump_core`, not the agent executable.
 
 ---
 
@@ -111,7 +111,7 @@ Create `CMakeLists.txt`:
 ```cmake
 cmake_minimum_required(VERSION 3.20)
 
-project(deepswitch VERSION 0.1.0 LANGUAGES CXX)
+project(oops-jump VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -123,7 +123,7 @@ find_package(X11 REQUIRED)
 
 enable_testing()
 
-add_library(deepswitch_core
+add_library(oopsjump_core
     src/core/ActionEngine.cpp
     src/core/AppMatcher.cpp
     src/core/AppRegistry.cpp
@@ -134,38 +134,38 @@ add_library(deepswitch_core
     src/core/Launcher.cpp
 )
 
-target_include_directories(deepswitch_core PUBLIC
+target_include_directories(oopsjump_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(deepswitch_core PUBLIC
+target_link_libraries(oopsjump_core PUBLIC
     Qt6::Core
 )
 
-add_library(deepswitch_x11
+add_library(oopsjump_x11
     src/backends/x11/X11Connection.cpp
     src/backends/x11/X11HotkeyBackend.cpp
     src/backends/x11/X11WindowBackend.cpp
 )
 
-target_include_directories(deepswitch_x11 PUBLIC
+target_include_directories(oopsjump_x11 PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(deepswitch_x11 PUBLIC
-    deepswitch_core
+target_link_libraries(oopsjump_x11 PUBLIC
+    oopsjump_core
     Qt6::Core
     Qt6::Gui
     X11::X11
 )
 
-add_executable(deepswitch-agent
+add_executable(oops-jump-agent
     src/agent/main.cpp
 )
 
-target_link_libraries(deepswitch-agent PRIVATE
-    deepswitch_core
-    deepswitch_x11
+target_link_libraries(oops-jump-agent PRIVATE
+    oopsjump_core
+    oopsjump_x11
     Qt6::Core
 )
 
@@ -184,11 +184,11 @@ Create `src/agent/main.cpp`:
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    QCoreApplication::setApplicationName("deepswitch-agent");
+    QCoreApplication::setApplicationName("oops-jump-agent");
     QCoreApplication::setApplicationVersion("0.1.0");
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("DeepSwitch command-line agent");
+    parser.setApplicationDescription("Oops Jump command-line agent");
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption({ "validate-config", "Validate the config file and exit." });
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
     parser.process(app);
 
     QTextStream out(stdout);
-    out << "deepswitch-agent scaffold ready\n";
+    out << "oops-jump-agent scaffold ready\n";
     return 0;
 }
 ```
@@ -215,7 +215,7 @@ Create `src/core/Result.h`:
 #include <QString>
 #include <utility>
 
-namespace deepswitch {
+namespace oopsjump {
 
 template <typename T>
 struct Result {
@@ -266,9 +266,9 @@ struct VoidResult {
 Create `tests/CMakeLists.txt`:
 
 ```cmake
-function(add_deepswitch_test name source)
+function(add_oopsjump_test name source)
     add_executable(${name} ${source})
-    target_link_libraries(${name} PRIVATE deepswitch_core Qt6::Test Qt6::Core)
+    target_link_libraries(${name} PRIVATE oopsjump_core Qt6::Test Qt6::Core)
     add_test(NAME ${name} COMMAND ${name})
     set_tests_properties(${name} PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endfunction()
@@ -314,7 +314,7 @@ Expected: CMake configuration succeeds after the source files from Step 5 exist.
 
 ```bash
 git add CMakeLists.txt src tests
-git commit -m "chore: scaffold deepswitch core project"
+git commit -m "chore: scaffold oops-jump core project"
 ```
 
 ---
@@ -335,7 +335,7 @@ git commit -m "chore: scaffold deepswitch core project"
 Append to `tests/CMakeLists.txt`:
 
 ```cmake
-add_deepswitch_test(test_config core/test_config.cpp)
+add_oopsjump_test(test_config core/test_config.cpp)
 ```
 
 - [ ] **Step 2: Write the failing config default test**
@@ -346,7 +346,7 @@ Create `tests/core/test_config.cpp`:
 #include <QtTest/QtTest>
 #include "core/Config.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class ConfigTest : public QObject {
     Q_OBJECT
@@ -397,7 +397,7 @@ Create `src/core/Config.h`:
 #include <QList>
 #include <QString>
 
-namespace deepswitch {
+namespace oopsjump {
 
 enum class HotkeyMode {
     Direct,
@@ -477,7 +477,7 @@ Create `src/core/Config.cpp`:
 ```cpp
 #include "core/Config.h"
 
-namespace deepswitch {
+namespace oopsjump {
 
 Config Config::defaults()
 {
@@ -545,7 +545,7 @@ Create `src/core/AppInfo.h`:
 #include <QString>
 #include <QStringList>
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct AppInfo {
     QString desktopId;
@@ -571,7 +571,7 @@ Create `src/core/WindowInfo.h`:
 
 #include <QString>
 
-namespace deepswitch {
+namespace oopsjump {
 
 using WindowId = quint64;
 
@@ -598,7 +598,7 @@ Create `src/core/X11Types.h`:
 ```cpp
 #pragma once
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct X11KeyRegistration {
     int keycode = 0;
@@ -641,7 +641,7 @@ git commit -m "feat: add core config data types"
 Append to `tests/CMakeLists.txt`:
 
 ```cmake
-add_deepswitch_test(test_hotkey core/test_hotkey.cpp)
+add_oopsjump_test(test_hotkey core/test_hotkey.cpp)
 ```
 
 - [ ] **Step 2: Write failing hotkey parser tests**
@@ -652,7 +652,7 @@ Create `tests/core/test_hotkey.cpp`:
 #include <QtTest/QtTest>
 #include "core/Hotkey.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class HotkeyTest : public QObject {
     Q_OBJECT
@@ -715,7 +715,7 @@ Create `src/core/Hotkey.h`:
 #include <QString>
 #include <QStringList>
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct Hotkey {
     QString sequence;
@@ -735,7 +735,7 @@ Create `src/core/Hotkey.cpp`:
 
 #include <QSet>
 
-namespace deepswitch {
+namespace oopsjump {
 
 static QString normalizeToken(const QString& token)
 {
@@ -918,7 +918,7 @@ Terminal=false
 Append to `tests/CMakeLists.txt`:
 
 ```cmake
-add_deepswitch_test(test_desktop_entry core/test_desktop_entry.cpp)
+add_oopsjump_test(test_desktop_entry core/test_desktop_entry.cpp)
 ```
 
 - [ ] **Step 3: Write failing desktop parser tests**
@@ -930,7 +930,7 @@ Create `tests/core/test_desktop_entry.cpp`:
 #include "core/DesktopEntry.h"
 #include "core/AppRegistry.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class DesktopEntryTest : public QObject {
     Q_OBJECT
@@ -990,7 +990,7 @@ Create `src/core/DesktopEntry.h`:
 #include "core/Result.h"
 #include <QString>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class DesktopEntry {
 public:
@@ -1010,7 +1010,7 @@ Create `src/core/DesktopEntry.cpp`:
 #include <QFileInfo>
 #include <QTextStream>
 
-namespace deepswitch {
+namespace oopsjump {
 
 static bool parseBool(const QString& value)
 {
@@ -1114,7 +1114,7 @@ Create `src/core/AppRegistry.h`:
 #include <QStringList>
 #include <optional>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class AppRegistry {
 public:
@@ -1140,7 +1140,7 @@ Create `src/core/AppRegistry.cpp`:
 #include <QDir>
 #include <QSet>
 
-namespace deepswitch {
+namespace oopsjump {
 
 void AppRegistry::setApplicationDirs(QStringList dirs)
 {
@@ -1312,7 +1312,7 @@ Create `src/core/ConfigManager.h`:
 #include "core/Result.h"
 #include <QString>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class ConfigManager {
 public:
@@ -1344,7 +1344,7 @@ Create `src/core/ConfigManager.cpp`:
 #include <QSet>
 #include <utility>
 
-namespace deepswitch {
+namespace oopsjump {
 
 ConfigManager::ConfigManager(QString path)
     : m_path(std::move(path))
@@ -1536,7 +1536,7 @@ git commit -m "feat: add config manager"
 Append to `tests/CMakeLists.txt`:
 
 ```cmake
-add_deepswitch_test(test_app_matcher core/test_app_matcher.cpp)
+add_oopsjump_test(test_app_matcher core/test_app_matcher.cpp)
 ```
 
 - [ ] **Step 2: Write failing matcher tests**
@@ -1547,7 +1547,7 @@ Create `tests/core/test_app_matcher.cpp`:
 #include <QtTest/QtTest>
 #include "core/AppMatcher.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class AppMatcherTest : public QObject {
     Q_OBJECT
@@ -1616,7 +1616,7 @@ Create `src/core/AppMatcher.h`:
 #include "core/WindowInfo.h"
 #include <QList>
 
-namespace deepswitch {
+namespace oopsjump {
 
 struct MatchEvidence {
     QString source;
@@ -1647,7 +1647,7 @@ Create `src/core/AppMatcher.cpp`:
 ```cpp
 #include "core/AppMatcher.h"
 
-namespace deepswitch {
+namespace oopsjump {
 
 static bool equalsIgnoreCase(const QString& left, const QString& right)
 {
@@ -1771,7 +1771,7 @@ Create `src/backends/x11/X11Connection.h`:
 #include <QString>
 #include <X11/Xlib.h>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class X11Connection {
 public:
@@ -1798,7 +1798,7 @@ Create `src/backends/x11/X11Connection.cpp`:
 ```cpp
 #include "backends/x11/X11Connection.h"
 
-namespace deepswitch {
+namespace oopsjump {
 
 X11Connection::X11Connection() = default;
 
@@ -1851,7 +1851,7 @@ Create `src/backends/x11/X11WindowBackend.h`:
 #include "backends/x11/X11Connection.h"
 #include <QList>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class X11WindowBackend {
 public:
@@ -1882,7 +1882,7 @@ Create `src/backends/x11/X11WindowBackend.cpp`:
 #include <X11/Xutil.h>
 #include <cstring>
 
-namespace deepswitch {
+namespace oopsjump {
 
 X11WindowBackend::X11WindowBackend(X11Connection& connection)
     : m_connection(connection)
@@ -2106,8 +2106,8 @@ Add includes to `src/agent/main.cpp`:
 Run:
 
 ```bash
-cmake --build build --target deepswitch-agent -j"$(nproc)"
-./build/deepswitch-agent --list-windows
+cmake --build build --target oops-jump-agent -j"$(nproc)"
+./build/oops-jump-agent --list-windows
 ```
 
 Expected on X11: prints one line per normal window with `window id`, `WM_CLASS`, and title.
@@ -2129,7 +2129,7 @@ Create `docs/m0-x11-findings.md`:
 
 ## Window Listing
 
-- `./build/deepswitch-agent --list-windows` result: record whether normal windows appear.
+- `./build/oops-jump-agent --list-windows` result: record whether normal windows appear.
 - Firefox `WM_CLASS`: record actual value.
 - Deepin Terminal `WM_CLASS`: record actual value.
 - VS Code `WM_CLASS`: record actual value.
@@ -2173,7 +2173,7 @@ Create `src/backends/x11/X11HotkeyBackend.h`:
 #include "backends/x11/X11Connection.h"
 #include <QHash>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class X11HotkeyBackend {
 public:
@@ -2202,7 +2202,7 @@ Create `src/backends/x11/X11HotkeyBackend.cpp`:
 
 #include <X11/keysym.h>
 
-namespace deepswitch {
+namespace oopsjump {
 
 X11HotkeyBackend::X11HotkeyBackend(X11Connection& connection)
     : m_connection(connection)
@@ -2382,8 +2382,8 @@ Add includes:
 Run:
 
 ```bash
-cmake --build build --target deepswitch-agent -j"$(nproc)"
-./build/deepswitch-agent
+cmake --build build --target oops-jump-agent -j"$(nproc)"
+./build/oops-jump-agent
 ```
 
 Expected on X11: terminal prints `registered Alt+1 for app.firefox`; pressing `Alt+1` prints `triggered app.firefox`.
@@ -2427,7 +2427,7 @@ git commit -m "feat: add x11 hotkey backend"
 Modify `tests/CMakeLists.txt`:
 
 ```cmake
-add_deepswitch_test(test_action_engine core/test_action_engine.cpp)
+add_oopsjump_test(test_action_engine core/test_action_engine.cpp)
 ```
 
 - [ ] **Step 2: Write failing action engine tests**
@@ -2438,7 +2438,7 @@ Create `tests/core/test_action_engine.cpp`:
 #include <QtTest/QtTest>
 #include "core/ActionEngine.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class ActionEngineTest : public QObject {
     Q_OBJECT
@@ -2503,7 +2503,7 @@ Create `src/core/ActionEngine.h`:
 #include "core/WindowInfo.h"
 #include <QList>
 
-namespace deepswitch {
+namespace oopsjump {
 
 enum class ActionType {
     Launch,
@@ -2533,7 +2533,7 @@ Create `src/core/ActionEngine.cpp`:
 ```cpp
 #include "core/ActionEngine.h"
 
-namespace deepswitch {
+namespace oopsjump {
 
 ActionDecision ActionEngine::decide(const Binding& binding, const AppInfo& app, const QList<WindowInfo>& windows)
 {
@@ -2568,7 +2568,7 @@ Create `src/core/Launcher.h`:
 #include "core/AppInfo.h"
 #include "core/Result.h"
 
-namespace deepswitch {
+namespace oopsjump {
 
 class Launcher {
 public:
@@ -2585,7 +2585,7 @@ Create `src/core/Launcher.cpp`:
 
 #include <QProcess>
 
-namespace deepswitch {
+namespace oopsjump {
 
 VoidResult Launcher::launch(const AppInfo& app)
 {
@@ -2639,7 +2639,7 @@ Modify `src/agent/main.cpp` so `--validate-config`:
 
 ```cpp
     const QString configPath = parser.value("config").isEmpty()
-        ? QDir::homePath() + "/.config/deepswitch/config.json"
+        ? QDir::homePath() + "/.config/oops-jump/config.json"
         : parser.value("config");
 
     if (parser.isSet("validate-config")) {
@@ -2801,14 +2801,14 @@ Add includes:
 Run:
 
 ```bash
-cmake --build build --target deepswitch-agent -j"$(nproc)"
+cmake --build build --target oops-jump-agent -j"$(nproc)"
 ```
 
 Expected: build succeeds.
 
 - [ ] **Step 6: Create a manual config and validate it**
 
-Create `/tmp/deepswitch-config.json`:
+Create `/tmp/oops-jump-config.json`:
 
 ```json
 {
@@ -2847,9 +2847,9 @@ Create `/tmp/deepswitch-config.json`:
 Run:
 
 ```bash
-./build/deepswitch-agent --config /tmp/deepswitch-config.json --validate-config
-./build/deepswitch-agent --config /tmp/deepswitch-config.json --list-bindings
-./build/deepswitch-agent --list-apps | head
+./build/oops-jump-agent --config /tmp/oops-jump-config.json --validate-config
+./build/oops-jump-agent --config /tmp/oops-jump-config.json --list-bindings
+./build/oops-jump-agent --list-apps | head
 ```
 
 Expected:
@@ -2866,7 +2866,7 @@ app.firefox    Alt+1    firefox.desktop
 Run:
 
 ```bash
-./build/deepswitch-agent --config /tmp/deepswitch-config.json --trigger app.firefox
+./build/oops-jump-agent --config /tmp/oops-jump-config.json --trigger app.firefox
 ```
 
 Expected:
@@ -2905,11 +2905,11 @@ Expected: all tests pass.
 Run:
 
 ```bash
-./build/deepswitch-agent --help
-./build/deepswitch-agent --config /tmp/deepswitch-config.json --validate-config
-./build/deepswitch-agent --config /tmp/deepswitch-config.json --list-bindings
-./build/deepswitch-agent --list-apps
-./build/deepswitch-agent --list-windows
+./build/oops-jump-agent --help
+./build/oops-jump-agent --config /tmp/oops-jump-config.json --validate-config
+./build/oops-jump-agent --config /tmp/oops-jump-config.json --list-bindings
+./build/oops-jump-agent --list-apps
+./build/oops-jump-agent --list-windows
 ```
 
 Expected:
@@ -2925,7 +2925,7 @@ Expected:
 On deepin v25 X11, run:
 
 ```bash
-./build/deepswitch-agent --config /tmp/deepswitch-config.json --trigger app.firefox
+./build/oops-jump-agent --config /tmp/oops-jump-config.json --trigger app.firefox
 ```
 
 Expected:

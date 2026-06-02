@@ -1,9 +1,9 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: cn.org.oops.deepswitch
-Source: https://github.com/deepin-community/deepswitch
+Upstream-Name: cn.org.oops.oops-jump
+Source: https://github.com/deepin-community/oops-jump
 
 Files: *
-Copyright: 2026 DeepSwitch Developers
+Copyright: 2026 Oops Jump Developers
 License: GPL-3+
 
 License: GPL-3+

@@ -9,7 +9,7 @@
 #include <QTextStream>
 #include <QtGlobal>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class LogFileManager {
 public:

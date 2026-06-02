@@ -5,7 +5,7 @@
 #include "backends/x11/X11Connection.h"
 #include <QHash>
 
-namespace deepswitch {
+namespace oopsjump {
 
 enum class SuperKeyEvent {
     NoEvent,

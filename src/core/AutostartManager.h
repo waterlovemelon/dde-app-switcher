@@ -4,7 +4,7 @@
 
 #include <QString>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class AutostartManager {
 public:

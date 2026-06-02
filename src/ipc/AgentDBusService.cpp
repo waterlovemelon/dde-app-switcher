@@ -3,7 +3,7 @@
 #include "agent/AgentController.h"
 #include "ipc/AgentTypes.h"
 
-namespace deepswitch {
+namespace oopsjump {
 namespace {
 
 QString stateToString(AgentControllerState state)

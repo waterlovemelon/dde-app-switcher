@@ -2,7 +2,7 @@
 
 #include <QSet>
 
-namespace deepswitch {
+namespace oopsjump {
 
 static QString normalizeToken(const QString& token)
 {

@@ -10,7 +10,7 @@
 #include <QTimer>
 #include <QTranslator>
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 namespace {
 
@@ -44,16 +44,16 @@ QVariantList parseAppsJson(const QString& json)
 int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
-    QGuiApplication::setApplicationName(QStringLiteral("deepswitch-overlay"));
+    QGuiApplication::setApplicationName(QStringLiteral("oops-jump-overlay"));
     QGuiApplication::setApplicationVersion(QStringLiteral("0.2.0"));
 
     QTranslator translator;
-    if (translator.load(QLocale::system(), "deepswitch", "_", ":/i18n")) {
+    if (translator.load(QLocale::system(), "oops-jump", "_", ":/i18n")) {
         QGuiApplication::installTranslator(&translator);
     }
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("DeepSwitch overlay"));
+    parser.setApplicationDescription(QStringLiteral("Oops Jump overlay"));
     parser.addHelpOption();
     // App bar mode
     parser.addOption({ QStringLiteral("apps"), QStringLiteral("JSON array of app entries for app bar mode."), QStringLiteral("json") });

@@ -1,7 +1,7 @@
 #include <QtTest/QtTest>
 #include "core/Hotkey.h"
 
-using namespace deepswitch;
+using namespace oopsjump;
 
 class HotkeyTest : public QObject {
     Q_OBJECT

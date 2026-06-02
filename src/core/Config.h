@@ -3,7 +3,7 @@
 #include <QList>
 #include <QString>
 
-namespace deepswitch {
+namespace oopsjump {
 
 enum class HotkeyMode {
     Direct,

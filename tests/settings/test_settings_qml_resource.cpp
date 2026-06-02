@@ -153,7 +153,7 @@ private slots:
         QVERIFY(aboutPageQml.open(QIODevice::ReadOnly | QIODevice::Text));
 
         const QString qml = QString::fromUtf8(aboutPageQml.readAll());
-        QVERIFY(qml.contains("DeepSwitch"));
+        QVERIFY(qml.contains("Oops Jump"));
         QVERIFY(qml.contains("capabilities"));
         QVERIFY(qml.contains("global_hotkey"));
         QVERIFY(qml.contains("window_list"));

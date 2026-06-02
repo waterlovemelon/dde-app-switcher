@@ -4,7 +4,7 @@
 #include <QDir>
 #include <QFileInfo>
 
-namespace deepswitch {
+namespace oopsjump {
 
 QMutex LogFileManager::s_handlerMutex;
 LogFileManager* LogFileManager::s_handlerTarget = nullptr;
@@ -54,7 +54,7 @@ bool LogFileManager::shouldUseFileLogging(const QStringList& arguments)
 
 QString LogFileManager::logFilePath() const
 {
-    return logDirectoryPath() + QStringLiteral("/deepswitch.log");
+    return logDirectoryPath() + QStringLiteral("/oops-jump.log");
 }
 
 QString LogFileManager::rotatedLogFilePath() const
@@ -193,7 +193,7 @@ QString LogFileManager::levelName(QtMsgType type)
 
 QString LogFileManager::logDirectoryPath() const
 {
-    return QDir(m_baseStateDir).filePath(QStringLiteral("deepswitch"));
+    return QDir(m_baseStateDir).filePath(QStringLiteral("oops-jump"));
 }
 
 VoidResult LogFileManager::openForAppend()

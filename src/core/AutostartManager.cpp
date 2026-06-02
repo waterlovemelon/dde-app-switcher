@@ -6,15 +6,15 @@
 #include <QSaveFile>
 #include <QStandardPaths>
 
-namespace deepswitch {
+namespace oopsjump {
 
 namespace {
 
 constexpr auto kAutostartDesktopEntry =
     "[Desktop Entry]\n"
     "Type=Application\n"
-    "Name=DeepSwitch Agent\n"
-    "Exec=deepswitch-agent\n"
+    "Name=Oops Jump Agent\n"
+    "Exec=oops-jump-agent\n"
     "X-GNOME-Autostart-enabled=true\n"
     "NoDisplay=true\n";
 
@@ -31,7 +31,7 @@ QString AutostartManager::configHome() const
 
 QString AutostartManager::autostartFilePath() const
 {
-    return QDir(configHome()).filePath("autostart/deepswitch-agent.desktop");
+    return QDir(configHome()).filePath("autostart/oops-jump-agent.desktop");
 }
 
 bool AutostartManager::isEnabled() const
@@ -72,6 +72,13 @@ VoidResult AutostartManager::enable() const
     if (!file.commit()) {
         return VoidResult::failure("autostart_write_failed", "Cannot commit user autostart file.");
     }
+
+    // Remove old "deepswitch-agent" autostart entry if present.
+    const QString oldPath = QDir(configHome()).filePath("autostart/deepswitch-agent.desktop");
+    if (QFileInfo::exists(oldPath)) {
+        QFile::remove(oldPath);
+    }
+
     return VoidResult::success();
 }
 

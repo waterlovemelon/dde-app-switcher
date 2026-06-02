@@ -4,7 +4,7 @@
 #include <QString>
 #include <X11/Xlib.h>
 
-namespace deepswitch {
+namespace oopsjump {
 
 class X11Connection {
 public:

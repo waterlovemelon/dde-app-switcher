@@ -7,7 +7,7 @@
 #include <cstring>
 #include <cstdlib>
 
-namespace deepswitch {
+namespace oopsjump {
 namespace {
 
 int g_lastGrabError = 0;
