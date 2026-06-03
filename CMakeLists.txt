@@ -31,7 +31,7 @@ set(TRANSLATION_QM_DIR ${CMAKE_CURRENT_BINARY_DIR}/translations)
 file(MAKE_DIRECTORY ${TRANSLATION_QM_DIR})
 
 if(Qt6LinguistTools_FOUND)
-    qt_add_translations(oopsjump-core
+    qt_add_translations(oopsjump_core
         TS_FILES ${TRANSLATION_TS_FILES}
         QM_FILES_OUTPUT_VARIABLE TRANSLATION_QM_FILES
     )
