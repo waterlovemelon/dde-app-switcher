@@ -98,6 +98,49 @@ private slots:
         QCOMPARE(controller.status().state, AgentControllerState::Running);
     }
 
+    void setBindingUpdatesLoadedConfigAndPersistsIt()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString configPath = dir.path() + "/config.json";
+
+        Config config = Config::defaults();
+        Binding binding;
+        binding.id = "terminal";
+        binding.hotkey = "Alt+Return";
+        binding.desktopId = "terminal.desktop";
+        config.bindings.append(binding);
+        QVERIFY(ConfigManager(configPath).save(config).ok);
+
+        AgentController controller(configPath, AgentController::BackendMode::Disabled);
+        QVERIFY(controller.reloadConfig().ok);
+
+        Binding updated;
+        updated.id = "terminal";
+        updated.hotkey = "Super+F";
+        updated.desktopId = "marktext.desktop";
+        updated.strategy = MultiWindowStrategy::Recent;
+        updated.launchIfNotRunning = false;
+        updated.focusExistingWindow = true;
+
+        const auto saved = controller.setBinding(updated);
+        QVERIFY2(saved.ok, qPrintable(saved.message));
+
+        const QList<Binding> bindings = controller.listBindings();
+        QCOMPARE(bindings.size(), 1);
+        QCOMPARE(bindings.first().id, QString("terminal"));
+        QCOMPARE(bindings.first().hotkey, QString("Super+F"));
+        QCOMPARE(bindings.first().desktopId, QString("marktext.desktop"));
+        QCOMPARE(bindings.first().strategy, MultiWindowStrategy::Recent);
+        QCOMPARE(bindings.first().launchIfNotRunning, false);
+
+        const auto reloaded = ConfigManager(configPath).load();
+        QVERIFY2(reloaded.ok, qPrintable(reloaded.message));
+        QCOMPARE(reloaded.value.bindings.size(), 1);
+        QCOMPARE(reloaded.value.bindings.first().hotkey, QString("Super+F"));
+        QCOMPARE(reloaded.value.bindings.first().desktopId, QString("marktext.desktop"));
+    }
+
     void showOverlayReflectsGeneralConfig()
     {
         QTemporaryDir dir;

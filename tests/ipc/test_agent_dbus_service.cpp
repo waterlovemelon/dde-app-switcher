@@ -100,10 +100,6 @@ private slots:
         AgentController controller("/path/that/uses/defaults.json", AgentController::BackendMode::Disabled);
         AgentDBusService service(controller);
 
-        const QVariantMap setBinding = service.SetBinding({ { "id", "terminal" } });
-        QCOMPARE(setBinding.value("ok").toBool(), false);
-        QCOMPARE(setBinding.value("error_code").toString(), QString("not_implemented"));
-
         const QVariantMap removeBinding = service.RemoveBinding("terminal");
         QCOMPARE(removeBinding.value("ok").toBool(), false);
         QCOMPARE(removeBinding.value("error_code").toString(), QString("not_implemented"));
@@ -120,6 +116,49 @@ private slots:
         QCOMPARE(windows.value("ok").toBool(), false);
         QCOMPARE(windows.value("error_code").toString(), QString("backend_unavailable"));
         QCOMPARE(windows.value("items").toList().size(), 0);
+    }
+
+    void setBindingPersistsBindingAndEmitsChanges()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString configPath = dir.path() + "/config.json";
+        QVERIFY(ConfigManager(configPath).save(Config::defaults()).ok);
+
+        AgentController controller(configPath, AgentController::BackendMode::Disabled);
+        QVERIFY(controller.reloadConfig().ok);
+        AgentDBusService service(controller);
+        QSignalSpy bindingChanged(&service, &AgentDBusService::BindingChanged);
+        QSignalSpy statusChanged(&service, &AgentDBusService::StatusChanged);
+
+        const QVariantMap result = service.SetBinding({
+            { "id", "terminal" },
+            { "enabled", true },
+            { "hotkey", "Super+F" },
+            { "desktop_id", "marktext.desktop" },
+            { "multi_window_strategy", "recent" },
+            { "launch_if_not_running", false },
+            { "focus_existing_window", true },
+        });
+
+        QVERIFY2(result.value("ok").toBool(), qPrintable(result.value("message").toString()));
+        QCOMPARE(result.value("error_code").toString(), QString());
+        QCOMPARE(bindingChanged.count(), 1);
+        QCOMPARE(statusChanged.count(), 1);
+        QCOMPARE(bindingChanged.first().at(0).toString(), QString("terminal"));
+        QCOMPARE(bindingChanged.first().at(1).toMap().value("hotkey").toString(), QString("Super+F"));
+
+        const QVariantList bindings = service.ListBindings();
+        QCOMPARE(bindings.size(), 1);
+        QCOMPARE(bindings.first().toMap().value("desktop_id").toString(), QString("marktext.desktop"));
+        QCOMPARE(bindings.first().toMap().value("multi_window_strategy").toString(), QString("recent"));
+        QCOMPARE(bindings.first().toMap().value("launch_if_not_running").toBool(), false);
+
+        const auto reloaded = ConfigManager(configPath).load();
+        QVERIFY2(reloaded.ok, qPrintable(reloaded.message));
+        QCOMPARE(reloaded.value.bindings.size(), 1);
+        QCOMPARE(reloaded.value.bindings.first().id, QString("terminal"));
+        QCOMPARE(reloaded.value.bindings.first().hotkey, QString("Super+F"));
     }
 
     void testHotkeyReturnsControllerResultEnvelope()

@@ -131,10 +131,19 @@ QVariantList AgentDBusService::ListBindings() const
 
 QVariantMap AgentDBusService::SetBinding(const QVariantMap& binding)
 {
-    Q_UNUSED(binding)
-    const QVariantMap result = unsupported("SetBinding");
-    emitError(result);
-    return result;
+    const Binding coreBinding = BindingDto::fromVariantMap(binding).toCore();
+    const auto saved = m_controller.setBinding(coreBinding);
+    if (!saved.ok) {
+        const QVariantMap result = failureResult(saved.errorCode, saved.message);
+        emitError(result);
+        emit StatusChanged(GetStatus());
+        return result;
+    }
+
+    const QVariantMap savedBinding = BindingDto::fromCore(coreBinding).toVariantMap();
+    emit StatusChanged(GetStatus());
+    emit BindingChanged(coreBinding.id, savedBinding);
+    return successResult("binding saved");
 }
 
 QVariantMap AgentDBusService::RemoveBinding(const QString& bindingId)

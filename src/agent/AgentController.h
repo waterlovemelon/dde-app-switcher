@@ -63,6 +63,7 @@ public:
     Result<QString> triggerAction(const QString& actionId);
     Result<QString> triggerHotkeyAction(const QString& actionId);
     QList<Binding> listBindings() const;
+    VoidResult setBinding(const Binding& binding);
     Result<QList<AppInfo>> listApplications();
     QVariantList resolveOverlayApps();
     Result<QList<WindowInfo>> listWindows(const QString& filter = QString()) const;

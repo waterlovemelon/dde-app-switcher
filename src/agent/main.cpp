@@ -243,6 +243,32 @@ int main(int argc, char *argv[])
         writeErr(superRegistered.errorCode + QStringLiteral(": ") + superRegistered.message);
     }
 
+    QObject::connect(&dbusService, &AgentDBusService::BindingChanged, &app, [&]() {
+        hotkeys.unregisterAll();
+
+        QStringList messages;
+        const auto registeredHotkeys = controller.registerHotkeys(hotkeys, &messages);
+        for (const QString& message : messages) {
+            if (message.startsWith("registered ")) {
+                writeOut(message);
+            } else {
+                writeErr(message);
+            }
+        }
+
+        if (!registeredHotkeys.ok) {
+            writeErr(registeredHotkeys.errorCode + QStringLiteral(": ") + registeredHotkeys.message);
+        }
+
+        const auto superKeyRegistered = hotkeys.registerSuperKey();
+        if (superKeyRegistered.ok) {
+            writeOut(QStringLiteral("registered Super_L for overlay"));
+        } else {
+            writeErr(superKeyRegistered.errorCode + QStringLiteral(": ") + superKeyRegistered.message);
+        }
+        out.flush();
+    });
+
     writeOut(QStringLiteral("listening for hotkeys; press Ctrl+C to exit"));
     out.flush();
 

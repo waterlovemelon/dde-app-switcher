@@ -324,6 +324,34 @@ QList<Binding> AgentController::listBindings() const
     return m_config.bindings;
 }
 
+VoidResult AgentController::setBinding(const Binding& binding)
+{
+    Config updated = m_config;
+    bool replaced = false;
+    for (Binding& candidate : updated.bindings) {
+        if (candidate.id == binding.id) {
+            candidate = binding;
+            replaced = true;
+            break;
+        }
+    }
+
+    if (!replaced) {
+        updated.bindings.append(binding);
+    }
+
+    ConfigManager manager(m_configPath);
+    const auto saved = manager.save(updated);
+    if (!saved.ok) {
+        return saved;
+    }
+
+    m_config = updated;
+    m_registeredHotkeyActionIds.clear();
+    updateState(m_config.general.enabled ? AgentControllerState::Running : AgentControllerState::Paused);
+    return VoidResult::success();
+}
+
 Result<QList<AppInfo>> AgentController::listApplications()
 {
     AppRegistry registry;
