@@ -55,7 +55,7 @@ private slots:
                  QString("[Desktop Entry]\n"
                          "Type=Application\n"
                          "Name=Oops Jump Agent\n"
-                         "Exec=oops-jump-agent\n"
+                         "Exec=/opt/apps/cn.org.oops.oops-jump/files/bin/oops-jump-agent\n"
                          "X-GNOME-Autostart-enabled=true\n"
                          "NoDisplay=true\n"));
     }
