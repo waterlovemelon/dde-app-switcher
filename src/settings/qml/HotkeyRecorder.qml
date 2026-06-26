@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "."
 
 FocusScope {
     id: recorder
@@ -212,9 +213,14 @@ FocusScope {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 34
                 radius: 8
-                color: recorder.recording ? "#fff8e8" : "#ffffff"
-                border.width: 1
-                border.color: recorder.conflict ? "#d98d72" : recorder.recording ? "#d5a94f" : "#c8d7de"
+                color: recorder.recording ? DTKTheme.recordingBackground : DTKTheme.inputBackground
+                border.width: recorder.activeFocus ? 2 : 1
+                border.color: {
+                    if (recorder.conflict) return DTKTheme.conflictBorder
+                    if (recorder.recording) return DTKTheme.recordingBorder
+                    if (recorder.activeFocus) return DTKTheme.highlight
+                    return DTKTheme.inputBorder
+                }
 
                 Text {
                     anchors.fill: parent
@@ -222,7 +228,7 @@ FocusScope {
                     anchors.rightMargin: 10
                     verticalAlignment: Text.AlignVCenter
                     text: recorder.text.length > 0 ? recorder.text : recorder.placeholderText
-                    color: recorder.text.length > 0 ? "#17313c" : "#8aa0aa"
+                    color: recorder.text.length > 0 ? DTKTheme.inputText : DTKTheme.inputPlaceholder
                     elide: Text.ElideRight
                     font.pixelSize: 14
                 }
@@ -232,15 +238,15 @@ FocusScope {
                 Layout.preferredWidth: recordLabel.implicitWidth + 28
                 Layout.preferredHeight: 34
                 radius: 8
-                color: recorder.recording ? "#fff5f5" : (recordMouse.containsMouse ? "#f5f5f5" : "#ffffff")
+                color: recorder.recording ? DTKTheme.errorBackground : (recordMouse.containsMouse ? DTKTheme.buttonBackgroundHovered : DTKTheme.buttonBackground)
                 border.width: 1
-                border.color: recorder.recording ? "#e57373" : (recordMouse.containsMouse ? "#00857a" : "#dddddd")
+                border.color: recorder.recording ? DTKTheme.errorBorder : (recordMouse.containsMouse ? DTKTheme.accentText : DTKTheme.buttonBorder)
 
                 Text {
                     id: recordLabel
                     anchors.centerIn: parent
                     text: recorder.recording ? qsTr("按下快捷键…") : qsTr("录制")
-                    color: recorder.recording ? "#c62828" : (recordMouse.containsMouse ? "#00857a" : "#666666")
+                    color: recorder.recording ? DTKTheme.errorText : (recordMouse.containsMouse ? DTKTheme.accentText : DTKTheme.buttonText)
                     font.pixelSize: 12
                     font.weight: Font.Medium
                 }
@@ -259,7 +265,7 @@ FocusScope {
             Layout.fillWidth: true
             visible: recorder.statusText.length > 0
             text: recorder.statusText
-            color: recorder.conflict ? "#93421e" : "#667985"
+            color: recorder.conflict ? DTKTheme.conflictText : DTKTheme.textMuted
             font.pixelSize: 12
             wrapMode: Text.WordWrap
         }

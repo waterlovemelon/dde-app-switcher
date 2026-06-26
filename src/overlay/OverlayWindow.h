@@ -6,6 +6,8 @@
 #include <QVariantList>
 #include <QQuickWindow>
 
+class QQuickView;
+
 namespace oopsjump {
 
 class OverlayWindow : public QObject {
@@ -16,9 +18,14 @@ public:
     explicit OverlayWindow(QString kind, QString message, QObject* parent = nullptr);
 
     void showHint();
+    void hide();
+
+signals:
+    void appClicked(int index);
 
 private:
-    QList<QQuickWindow*> m_windows;
+    void connectViewSignals(QQuickView* view);
+    QList<QQuickView*> m_windows;
 };
 
 }

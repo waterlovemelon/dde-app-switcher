@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "."
 
 Button {
     id: control
@@ -9,9 +10,9 @@ Button {
     contentItem: Text {
         text: control.text
         color: {
-            if (control.style === "primary") return "#ffffff"
-            if (control.style === "ghost") return control.hovered ? "#00857a" : "#888888"
-            return control.hovered ? "#00857a" : "#666666"
+            if (control.style === "primary") return DTKTheme.primaryButtonText
+            if (control.style === "ghost") return control.hovered ? DTKTheme.accentTextHovered : DTKTheme.textSecondary
+            return control.hovered ? DTKTheme.buttonTextHovered : DTKTheme.buttonText
         }
         font.pixelSize: 13
         font.weight: Font.Medium
@@ -25,16 +26,16 @@ Button {
         radius: 8
 
         color: {
-            if (control.style === "primary") return control.hovered ? "#00695c" : "#00857a"
+            if (control.style === "primary") return control.hovered ? DTKTheme.primaryButtonBackgroundHovered : DTKTheme.primaryButtonBackground
             if (control.style === "ghost") return "transparent"
-            return control.hovered ? "#f5f5f5" : "#ffffff"
+            return control.hovered ? DTKTheme.buttonBackgroundHovered : DTKTheme.buttonBackground
         }
 
         border.width: 1
         border.color: {
-            if (control.style === "primary") return control.hovered ? "#00695c" : "#00857a"
-            if (control.style === "ghost") return control.hovered ? "#00857a" : "#d0d0d0"
-            return control.hovered ? "#cccccc" : "#dddddd"
+            if (control.style === "primary") return control.hovered ? DTKTheme.primaryButtonBackgroundHovered : DTKTheme.primaryButtonBackground
+            if (control.style === "ghost") return control.hovered ? DTKTheme.accentText : DTKTheme.buttonBorder
+            return control.hovered ? DTKTheme.buttonBorderHovered : DTKTheme.buttonBorder
         }
     }
 }

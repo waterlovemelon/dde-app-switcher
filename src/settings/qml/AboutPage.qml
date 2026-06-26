@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "."
 
 Flickable {
     id: page
@@ -76,7 +77,7 @@ Flickable {
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: "Oops Jump"
-                    color: "#1a1a1a"
+                    color: DTKTheme.textPrimary
                     font.pixelSize: 20
                     font.weight: Font.Bold
                 }
@@ -84,7 +85,7 @@ Flickable {
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("版本 0.1.0")
-                    color: "#999999"
+                    color: DTKTheme.textMuted
                     font.pixelSize: 13
                 }
 
@@ -92,7 +93,7 @@ Flickable {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.maximumWidth: 360
                     text: qsTr("为 deepin v25 打造的键盘优先应用切换器。\n一个快捷键，一个应用。按快捷键启动或聚焦，支持多窗口循环切换。")
-                    color: "#666666"
+                    color: DTKTheme.textSecondary
                     font.pixelSize: 13
                     wrapMode: Text.WordWrap
                     horizontalAlignment: Text.AlignHCenter
@@ -110,7 +111,7 @@ Flickable {
             Text {
                 anchors.centerIn: parent
                 text: page.showDebug ? qsTr("隐藏运行状态 ▲") : qsTr("查看运行状态 ▼")
-                color: "#aaaaaa"
+                color: DTKTheme.textMuted
                 font.pixelSize: 12
 
                 MouseArea {
@@ -127,9 +128,9 @@ Flickable {
             Layout.preferredHeight: page.showDebug ? debugGrid.implicitHeight + 32 : 0
             Layout.topMargin: page.showDebug ? 8 : 0
             radius: 12
-            color: "#fafbfc"
+            color: DTKTheme.cardBackground
             border.width: 1
-            border.color: "#e8e8e8"
+            border.color: DTKTheme.cardBorder
             clip: true
             visible: page.showDebug || height > 0
 
@@ -152,9 +153,9 @@ Flickable {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 52
                     radius: 8
-                    color: "#ffffff"
+                    color: DTKTheme.debugCardBackground
                     border.width: 1
-                    border.color: "#eeeeee"
+                    border.color: DTKTheme.debugCardBorder
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -163,13 +164,13 @@ Flickable {
 
                         Text {
                             text: qsTr("Agent 状态")
-                            color: "#999999"
+                            color: DTKTheme.textMuted
                             font.pixelSize: 11
                         }
 
                         Text {
                             text: controller.connected ? qsTr("已连接") : qsTr("未连接")
-                            color: controller.connected ? "#2e7d32" : "#c62828"
+                            color: controller.connected ? DTKTheme.successText : DTKTheme.errorText
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }
@@ -181,9 +182,9 @@ Flickable {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 52
                     radius: 8
-                    color: "#ffffff"
+                    color: DTKTheme.debugCardBackground
                     border.width: 1
-                    border.color: "#eeeeee"
+                    border.color: DTKTheme.debugCardBorder
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -192,13 +193,13 @@ Flickable {
 
                         Text {
                             text: qsTr("会话类型")
-                            color: "#999999"
+                            color: DTKTheme.textMuted
                             font.pixelSize: 11
                         }
 
                         Text {
                             text: statusMap()["session_type"] || qsTr("未知")
-                            color: "#333333"
+                            color: DTKTheme.textPrimary
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }
@@ -210,9 +211,9 @@ Flickable {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 52
                     radius: 8
-                    color: "#ffffff"
+                    color: DTKTheme.debugCardBackground
                     border.width: 1
-                    border.color: "#eeeeee"
+                    border.color: DTKTheme.debugCardBorder
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -221,13 +222,13 @@ Flickable {
 
                         Text {
                             text: qsTr("活跃后端")
-                            color: "#999999"
+                            color: DTKTheme.textMuted
                             font.pixelSize: 11
                         }
 
                         Text {
                             text: statusMap()["active_backend"] || qsTr("不可用")
-                            color: "#333333"
+                            color: DTKTheme.textPrimary
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }
@@ -239,9 +240,9 @@ Flickable {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 52
                     radius: 8
-                    color: "#ffffff"
+                    color: DTKTheme.debugCardBackground
                     border.width: 1
-                    border.color: "#eeeeee"
+                    border.color: DTKTheme.debugCardBorder
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -250,13 +251,13 @@ Flickable {
 
                         Text {
                             text: qsTr("绑定数量")
-                            color: "#999999"
+                            color: DTKTheme.textMuted
                             font.pixelSize: 11
                         }
 
                         Text {
                             text: bindingCount()
-                            color: "#333333"
+                            color: DTKTheme.textPrimary
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }
@@ -268,9 +269,9 @@ Flickable {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 52
                     radius: 8
-                    color: "#ffffff"
+                    color: DTKTheme.debugCardBackground
                     border.width: 1
-                    border.color: "#eeeeee"
+                    border.color: DTKTheme.debugCardBorder
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -279,13 +280,13 @@ Flickable {
 
                         Text {
                             text: qsTr("全局热键")
-                            color: "#999999"
+                            color: DTKTheme.textMuted
                             font.pixelSize: 11
                         }
 
                         Text {
                             text: yesNo(capabilities()["global_hotkey"])
-                            color: capabilities()["global_hotkey"] ? "#2e7d32" : "#c62828"
+                            color: capabilities()["global_hotkey"] ? DTKTheme.successText : DTKTheme.errorText
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }
@@ -297,9 +298,9 @@ Flickable {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 52
                     radius: 8
-                    color: "#ffffff"
+                    color: DTKTheme.debugCardBackground
                     border.width: 1
-                    border.color: "#eeeeee"
+                    border.color: DTKTheme.debugCardBorder
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -308,13 +309,13 @@ Flickable {
 
                         Text {
                             text: qsTr("窗口列表")
-                            color: "#999999"
+                            color: DTKTheme.textMuted
                             font.pixelSize: 11
                         }
 
                         Text {
                             text: yesNo(capabilities()["window_list"])
-                            color: capabilities()["window_list"] ? "#2e7d32" : "#c62828"
+                            color: capabilities()["window_list"] ? DTKTheme.successText : DTKTheme.errorText
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }
@@ -326,9 +327,9 @@ Flickable {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 52
                     radius: 8
-                    color: "#ffffff"
+                    color: DTKTheme.debugCardBackground
                     border.width: 1
-                    border.color: "#eeeeee"
+                    border.color: DTKTheme.debugCardBorder
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -337,13 +338,13 @@ Flickable {
 
                         Text {
                             text: qsTr("窗口激活")
-                            color: "#999999"
+                            color: DTKTheme.textMuted
                             font.pixelSize: 11
                         }
 
                         Text {
                             text: yesNo(capabilities()["activate_window"])
-                            color: capabilities()["activate_window"] ? "#2e7d32" : "#c62828"
+                            color: capabilities()["activate_window"] ? DTKTheme.successText : DTKTheme.errorText
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }
@@ -355,9 +356,9 @@ Flickable {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 52
                     radius: 8
-                    color: "#ffffff"
+                    color: DTKTheme.debugCardBackground
                     border.width: 1
-                    border.color: "#eeeeee"
+                    border.color: DTKTheme.debugCardBorder
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -366,13 +367,13 @@ Flickable {
 
                         Text {
                             text: qsTr("应用启动")
-                            color: "#999999"
+                            color: DTKTheme.textMuted
                             font.pixelSize: 11
                         }
 
                         Text {
                             text: yesNo(capabilities()["launch_app"])
-                            color: capabilities()["launch_app"] ? "#2e7d32" : "#c62828"
+                            color: capabilities()["launch_app"] ? DTKTheme.successText : DTKTheme.errorText
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }

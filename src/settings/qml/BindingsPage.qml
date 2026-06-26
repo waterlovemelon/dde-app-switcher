@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "."
 
 Item {
     id: page
@@ -54,6 +55,17 @@ Item {
                 return app.icon || "application-x-executable"
         }
         return "application-x-executable"
+    }
+
+    function formatHotkey(hotkey) {
+        var text = displayText(hotkey, "")
+        if (text.length === 0) return text
+        // Replace modifier names with Unicode symbols for better readability
+        text = text.replace(/\bSuper\b/g, "⌘")   // ⌘
+        text = text.replace(/\bShift\b/g, "⇧")   // ⇧
+        text = text.replace(/\bAlt\b/g, "⌥")     // ⌥
+        text = text.replace(/\bCtrl\b/g, "⌃")    // ⌃
+        return text
     }
 
     function isEnabled(binding) {
@@ -122,7 +134,7 @@ Item {
     }
 
     component MutedText: Text {
-        color: "#999999"
+        color: DTKTheme.textMuted
         font.pixelSize: 12
         elide: Text.ElideRight
     }
@@ -137,7 +149,7 @@ Item {
 
         Text {
             text: qsTr("按快捷键启动或切换到对应应用，点击卡片可编辑。")
-            color: "#aaaaaa"
+            color: DTKTheme.textMuted
             font.pixelSize: 12
         }
 
@@ -154,9 +166,9 @@ Item {
                 width: bindingList.width
                 height: 58
                 radius: 12
-                color: "#fafbfc"
+                color: DTKTheme.cardBackground
                 border.width: 1
-                border.color: "#e8e8e8"
+                border.color: DTKTheme.cardBorder
 
                 MouseArea {
                     anchors.fill: parent
@@ -187,7 +199,7 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: page.appNameForDesktopId(modelData.desktop_id)
-                            color: "#1a1a1a"
+                            color: DTKTheme.textPrimary
                             font.pixelSize: 14
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
@@ -203,12 +215,12 @@ Item {
                         Layout.preferredWidth: hotkeyLabel.implicitWidth + 16
                         Layout.preferredHeight: 26
                         radius: 6
-                        color: "#f0f0f0"
+                        color: DTKTheme.hotkeyBackground
                         Text {
                             id: hotkeyLabel
                             anchors.centerIn: parent
-                            text: page.displayText(modelData.hotkey, qsTr("未设置"))
-                            color: "#555555"
+                            text: page.formatHotkey(modelData.hotkey) || qsTr("未设置")
+                            color: DTKTheme.hotkeyText
                             font.pixelSize: 12
                             font.weight: Font.DemiBold
                             font.family: "SF Mono, Cascadia Code, monospace"
@@ -240,7 +252,7 @@ Item {
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         text: qsTr("暂无快捷绑定")
-                        color: "#1a1a1a"
+                        color: DTKTheme.textPrimary
                         font.pixelSize: 16
                         font.weight: Font.DemiBold
                     }
@@ -260,11 +272,11 @@ Item {
             radius: 12
             color: "transparent"
             border.width: 2
-            border.color: addMouse.containsMouse ? "#00857a" : "#d0d0d0"
+            border.color: addMouse.containsMouse ? DTKTheme.accentText : DTKTheme.buttonBorder
             Text {
                 anchors.centerIn: parent
                 text: "+ " + qsTr("添加快捷绑定")
-                color: addMouse.containsMouse ? "#00857a" : "#888888"
+                color: addMouse.containsMouse ? DTKTheme.accentText : DTKTheme.textSecondary
                 font.pixelSize: 14
             }
             MouseArea {
@@ -283,15 +295,15 @@ Item {
             radius: 8
             visible: controller.lastError.length > 0
                      && controller.lastErrorCode !== "hotkey_backend_unavailable"
-            color: "#fbe9e7"
+            color: DTKTheme.errorBackground
             border.width: 1
-            border.color: "#e2b199"
+            border.color: DTKTheme.errorBorder
             Text {
                 id: errorMessage
                 anchors.fill: parent
                 anchors.margins: 10
                 text: controller.lastError
-                color: "#c62828"
+                color: DTKTheme.errorText
                 font.pixelSize: 13
                 wrapMode: Text.WordWrap
             }
@@ -351,9 +363,9 @@ Item {
                         id: dialogPanel
                         anchors.fill: parent
                         radius: 14
-                        color: "#ffffff"
+                        color: DTKTheme.dialogBackground
                         border.width: 1
-                        border.color: "#d7dce0"
+                        border.color: DTKTheme.dialogBorder
                         clip: true
 
                         MouseArea {
@@ -376,7 +388,7 @@ Item {
                                     anchors.bottom: parent.bottom
                                     width: parent.width
                                     height: 1
-                                    color: "#e8e8e8"
+                                    color: DTKTheme.cardBorder
                                 }
                                 RowLayout {
                                     anchors.fill: parent
@@ -387,7 +399,7 @@ Item {
                                         Layout.preferredWidth: 24
                                         Layout.preferredHeight: 24
                                         radius: 6
-                                        color: "#e0f2f1"
+                                        color: DTKTheme.iconLetterBackground
                                         Text {
                                             anchors.centerIn: parent
                                         text: page.editorShowingPicker
@@ -395,7 +407,7 @@ Item {
                                               : page.editorOriginalId.length > 0
                                                 ? page.iconLetter(page.editorOriginalBinding)
                                                 : "+"
-                                            color: "#00695c"
+                                            color: DTKTheme.iconLetterText
                                             font.pixelSize: 11
                                             font.weight: Font.Bold
                                         }
@@ -404,7 +416,7 @@ Item {
                                         text: page.editorShowingPicker
                                               ? qsTr("选择应用")
                                               : page.editorOriginalId.length > 0 ? qsTr("编辑绑定") : qsTr("添加绑定")
-                                        color: "#1a1a1a"
+                                        color: DTKTheme.textPrimary
                                         font.pixelSize: 14
                                         font.weight: Font.DemiBold
                                     }
@@ -414,11 +426,11 @@ Item {
                                         Layout.preferredHeight: 28
                                         radius: 14
                                         visible: page.editorShowingPicker
-                                        color: backBtnMouse.containsMouse ? "#f2f3f5" : "transparent"
+                                        color: backBtnMouse.containsMouse ? DTKTheme.buttonBackgroundHovered : "transparent"
                                         Text {
                                             anchors.centerIn: parent
                                             text: "<"
-                                            color: "#777777"
+                                            color: DTKTheme.textSecondary
                                             font.pixelSize: 16
                                             font.weight: Font.DemiBold
                                         }
@@ -434,11 +446,11 @@ Item {
                                         Layout.preferredWidth: 28
                                         Layout.preferredHeight: 28
                                         radius: 14
-                                        color: closeBtnMouse.containsMouse ? "#fee" : "transparent"
+                                        color: closeBtnMouse.containsMouse ? DTKTheme.errorBackground : "transparent"
                                         Text {
                                             anchors.centerIn: parent
                                             text: "x"
-                                            color: closeBtnMouse.containsMouse ? "#c62828" : "#999"
+                                            color: closeBtnMouse.containsMouse ? DTKTheme.errorText : DTKTheme.textMuted
                                             font.pixelSize: 14
                                         }
                                         MouseArea {
@@ -474,7 +486,7 @@ Item {
                                             rowSpacing: 8
                                             columnSpacing: 14
 
-                                            Text { text: qsTr("应用"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                            Text { text: qsTr("应用"); color: DTKTheme.textSecondary; font.pixelSize: 13; font.weight: Font.DemiBold }
                                             RowLayout {
                                                 Layout.fillWidth: true
                                                 spacing: 8
@@ -491,7 +503,7 @@ Item {
                                                 }
                                             }
 
-                                            Text { text: qsTr("快捷键"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                            Text { text: qsTr("快捷键"); color: DTKTheme.textSecondary; font.pixelSize: 13; font.weight: Font.DemiBold }
                                             HotkeyRecorder {
                                                 id: fldHotkey
                                                 Layout.fillWidth: true
@@ -507,10 +519,10 @@ Item {
                                                 Layout.topMargin: 4
                                                 Layout.bottomMargin: 4
                                                 height: 1
-                                                color: "#f0f0f0"
+                                                color: DTKTheme.separator
                                             }
 
-                                            Text { text: qsTr("多窗口策略"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                            Text { text: qsTr("多窗口策略"); color: DTKTheme.textSecondary; font.pixelSize: 13; font.weight: Font.DemiBold }
                                             StyledComboBox {
                                                 id: fldStrategy
                                                 Layout.fillWidth: true
@@ -525,14 +537,14 @@ Item {
                                                 Component.onCompleted: currentIndex = Math.max(0, indexOfValue(page.editorStrategy))
                                             }
 
-                                            Text { text: qsTr("未运行时"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                            Text { text: qsTr("未运行时"); color: DTKTheme.textSecondary; font.pixelSize: 13; font.weight: Font.DemiBold }
                                             StyledCheckBox {
                                                 id: fldLaunch
                                                 checked: page.editorLaunchIfNotRunning
                                                 text: qsTr("自动启动应用")
                                             }
 
-                                            Text { text: qsTr("已有窗口"); color: "#405863"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                                            Text { text: qsTr("已有窗口"); color: DTKTheme.textSecondary; font.pixelSize: 13; font.weight: Font.DemiBold }
                                             StyledCheckBox {
                                                 id: fldFocus
                                                 checked: page.editorFocusExistingWindow
@@ -544,7 +556,7 @@ Item {
                                             Layout.fillWidth: true
                                             visible: page.editorErrorText.length > 0
                                             text: page.editorErrorText
-                                            color: "#c62828"
+                                            color: DTKTheme.errorText
                                             font.pixelSize: 13
                                             wrapMode: Text.WordWrap
                                         }
@@ -579,7 +591,7 @@ Item {
                                     anchors.top: parent.top
                                     width: parent.width
                                     height: 1
-                                    color: "#e8e8e8"
+                                    color: DTKTheme.cardBorder
                                 }
                                 RowLayout {
                                     anchors.fill: parent

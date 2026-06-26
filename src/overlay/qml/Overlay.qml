@@ -7,6 +7,9 @@ Rectangle {
     border.color: overlayMode === "appbar" ? Qt.rgba(1, 1, 1, 0.15) : "#33ffffff"
     border.width: 1
 
+    signal appClicked(int index)
+    signal hideRequested()
+
     // ── App Bar Mode ──────────────────────────────────────────────
     Row {
         id: barRow
@@ -100,6 +103,7 @@ Rectangle {
                     onExited: { slotBg.color = isActive ? Qt.rgba(1,1,1,0.14) : "transparent"; parent.scale = 1.0; }
                     onPressed: parent.scale = 0.94;
                     onReleased: parent.scale = containsMouse ? 1.06 : 1.0;
+                    onClicked: root.appClicked(index)
                 }
 
                 Behavior on scale {
@@ -180,10 +184,27 @@ Rectangle {
     opacity: 0
     Component.onCompleted: fadeIn.start()
 
-    NumberAnimation on opacity {
+    NumberAnimation {
         id: fadeIn
+        target: root
+        property: "opacity"
         to: 1.0
         duration: overlayMode === "appbar" ? 300 : 90
         easing.type: Easing.OutCubic
+    }
+
+    NumberAnimation {
+        id: fadeOut
+        target: root
+        property: "opacity"
+        to: 0.0
+        duration: overlayMode === "appbar" ? 200 : 90
+        easing.type: Easing.InCubic
+        onStopped: root.hideRequested()
+    }
+
+    function hide() {
+        fadeIn.stop()
+        fadeOut.start()
     }
 }

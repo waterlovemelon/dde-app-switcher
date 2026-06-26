@@ -4,6 +4,7 @@
 #include <QGuiApplication>
 #include <QQmlContext>
 #include <QQmlEngine>
+#include <QQuickItem>
 #include <QQuickView>
 #include <QScreen>
 #include <QUrl>
@@ -62,6 +63,7 @@ OverlayWindow::OverlayWindow(QVariantList apps, QObject* parent)
     for (QScreen* screen : screens) {
         auto* view = createBaseView();
         setupAppBarView(view, apps);
+        connectViewSignals(view);
         m_windows.append(view);
     }
 }
@@ -73,6 +75,7 @@ OverlayWindow::OverlayWindow(QString kind, QString message, QObject* parent)
     for (QScreen* screen : screens) {
         auto* view = createBaseView();
         setupToastView(view, kind, message);
+        connectViewSignals(view);
         m_windows.append(view);
     }
 }
@@ -99,6 +102,26 @@ void OverlayWindow::showHint()
         m_windows[i]->show();
         m_windows[i]->raise();
     }
+}
+
+void OverlayWindow::hide()
+{
+    for (QQuickView* view : m_windows) {
+        QMetaObject::invokeMethod(view->rootObject(), "hide");
+    }
+}
+
+void OverlayWindow::connectViewSignals(QQuickView* view)
+{
+    QQuickItem* root = view->rootObject();
+    if (!root)
+        return;
+
+    // Forward appClicked signal from QML to this OverlayWindow
+    connect(root, SIGNAL(appClicked(int)), this, SIGNAL(appClicked(int)));
+
+    // When fadeOut completes, hide the QQuickView
+    connect(root, SIGNAL(hideRequested()), view, SLOT(hide()));
 }
 
 }

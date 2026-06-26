@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "."
 
 ApplicationWindow {
     id: window
@@ -11,12 +12,12 @@ ApplicationWindow {
     minimumHeight: 480
     visible: true
     title: qsTr("Oops Jump Settings")
-    color: "#f5f6f8"
+    color: DTKTheme.windowBackground
 
     property int selectedPage: 0
 
     background: Rectangle {
-        color: "#f5f6f8"
+        color: DTKTheme.windowBackground
     }
 
     ColumnLayout {
@@ -27,7 +28,7 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 52
-            color: "#ffffff"
+            color: DTKTheme.titleBarBackground
 
             RowLayout {
                 anchors.fill: parent
@@ -37,7 +38,7 @@ ApplicationWindow {
 
                 Text {
                     text: qsTr("Oops Jump")
-                    color: "#1a1a1a"
+                    color: DTKTheme.textPrimary
                     font.pixelSize: 17
                     font.weight: Font.DemiBold
                 }
@@ -48,13 +49,13 @@ ApplicationWindow {
                     Layout.preferredWidth: statusLabel.implicitWidth + 20
                     Layout.preferredHeight: 22
                     radius: 11
-                    color: settingsController.connected ? "#e8f5e9" : "#fbe9e7"
+                    color: settingsController.connected ? DTKTheme.statusConnectedBg : DTKTheme.statusDisconnectedBg
 
                     Text {
                         id: statusLabel
                         anchors.centerIn: parent
                         text: settingsController.connected ? qsTr("● 已连接") : qsTr("● 未连接")
-                        color: settingsController.connected ? "#2e7d32" : "#c62828"
+                        color: settingsController.connected ? DTKTheme.successText : DTKTheme.errorText
                         font.pixelSize: 12
                         font.weight: Font.Medium
                     }
@@ -65,7 +66,7 @@ ApplicationWindow {
                 anchors.bottom: parent.bottom
                 width: parent.width
                 height: 1
-                color: "#e8e8e8"
+                color: DTKTheme.cardBorder
             }
         }
 
@@ -73,7 +74,7 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 42
-            color: "#ffffff"
+            color: DTKTheme.titleBarBackground
 
             RowLayout {
                 anchors.fill: parent
@@ -100,7 +101,7 @@ ApplicationWindow {
                             id: tabLabel
                             anchors.centerIn: parent
                             text: tabItem.modelData
-                            color: window.selectedPage === tabItem.index ? "#00857a" : "#888888"
+                            color: window.selectedPage === tabItem.index ? DTKTheme.tabActive : DTKTheme.tabInactive
                             font.pixelSize: 14
                             font.weight: window.selectedPage === tabItem.index ? Font.DemiBold : Font.Normal
                         }
@@ -111,7 +112,7 @@ ApplicationWindow {
                             width: tabLabel.implicitWidth + 16
                             height: 2
                             radius: 1
-                            color: "#00857a"
+                            color: DTKTheme.tabIndicator
                             visible: window.selectedPage === tabItem.index
                         }
 
@@ -130,7 +131,7 @@ ApplicationWindow {
                 anchors.bottom: parent.bottom
                 width: parent.width
                 height: 1
-                color: "#e8e8e8"
+                color: DTKTheme.cardBorder
             }
         }
 
@@ -160,13 +161,13 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 44
-            color: "#fafbfc"
+            color: DTKTheme.footerBackground
 
             Rectangle {
                 anchors.top: parent.top
                 width: parent.width
                 height: 1
-                color: "#e8e8e8"
+                color: DTKTheme.cardBorder
             }
 
             RowLayout {
@@ -177,7 +178,7 @@ ApplicationWindow {
 
                 Text {
                     text: qsTr("按 Esc 关闭窗口")
-                    color: "#bbbbbb"
+                    color: DTKTheme.textDisabled
                     font.pixelSize: 12
                 }
 

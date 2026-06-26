@@ -4,6 +4,10 @@ import QtQuick.Controls
 Switch {
     id: control
 
+    Accessible.role: Accessible.CheckBox
+    Accessible.name: control.text || qsTr("开关")
+    Accessible.description: control.checked ? qsTr("已开启") : qsTr("已关闭")
+
     indicator: Rectangle {
         implicitWidth: 40
         implicitHeight: 22

@@ -3,8 +3,12 @@
 pragma Singleton
 
 import QtQuick
+import QtQuick.Controls
 
 QtObject {
+    // ── Dark mode detection ──
+    readonly property bool isDark: Application.styleHints.colorScheme === Qt.ColorScheme.Dark
+
     // ── Global control defaults ──
     readonly property int radius: 8
     readonly property int spacing: 6
@@ -142,4 +146,68 @@ QtObject {
         readonly property color darkColor: "#55000000"
         readonly property color darkNoBlurColor: Qt.rgba(35 / 255, 35 / 255, 35 / 255, 1.0)
     }
+
+    // ── Theme-aware colors (light / dark) ──
+    readonly property color windowBackground: isDark ? "#1a1a1a" : "#f5f6f8"
+    readonly property color titleBarBackground: isDark ? "#252525" : "#ffffff"
+    readonly property color cardBackground: isDark ? "#2a2a2a" : "#fafbfc"
+    readonly property color cardBorder: isDark ? "#3a3a3a" : "#e8e8e8"
+    readonly property color dialogBackground: isDark ? "#2d2d2d" : "#ffffff"
+    readonly property color dialogBorder: isDark ? "#3d3d3d" : "#d7dce0"
+    readonly property color separator: isDark ? "#3a3a3a" : "#f0f0f0"
+    readonly property color footerBackground: isDark ? "#222222" : "#fafbfc"
+
+    readonly property color textPrimary: isDark ? "#e0e0e0" : "#1a1a1a"
+    readonly property color textSecondary: isDark ? "#a0a0a0" : "#888888"
+    readonly property color textMuted: isDark ? "#808080" : "#999999"
+    readonly property color textDisabled: isDark ? "#606060" : "#bbbbbb"
+
+    readonly property color inputBackground: isDark ? "#353535" : "#ffffff"
+    readonly property color inputBorder: isDark ? "#4a4a4a" : "#c8d7de"
+    readonly property color inputText: isDark ? "#e0e0e0" : "#17313c"
+    readonly property color inputPlaceholder: isDark ? "#707070" : "#8aa0aa"
+
+    readonly property color hotkeyBackground: isDark ? "#353535" : "#f0f0f0"
+    readonly property color hotkeyText: isDark ? "#c0c0c0" : "#555555"
+
+    readonly property color buttonBackground: isDark ? "#353535" : "#ffffff"
+    readonly property color buttonBackgroundHovered: isDark ? "#404040" : "#f5f5f5"
+    readonly property color buttonBorder: isDark ? "#4a4a4a" : "#dddddd"
+    readonly property color buttonBorderHovered: isDark ? "#5a5a5a" : "#cccccc"
+    readonly property color buttonText: isDark ? "#c0c0c0" : "#666666"
+    readonly property color buttonTextHovered: isDark ? "#e0e0e0" : "#00857a"
+
+    readonly property color primaryButtonBackground: isDark ? "#007060" : "#00857a"
+    readonly property color primaryButtonBackgroundHovered: isDark ? "#00857a" : "#00695c"
+    readonly property color primaryButtonText: isDark ? "#ffffff" : "#ffffff"
+
+    readonly property color accentText: isDark ? "#4db8ff" : "#00857a"
+    readonly property color accentTextHovered: isDark ? "#6cc7ff" : "#00695c"
+
+    readonly property color errorBackground: isDark ? "#3d1a1a" : "#fbe9e7"
+    readonly property color errorBorder: isDark ? "#5a2a2a" : "#e2b199"
+    readonly property color errorText: isDark ? "#ff6b6b" : "#c62828"
+
+    readonly property color successText: isDark ? "#66bb6a" : "#2e7d32"
+    readonly property color warningText: isDark ? "#ffb74d" : "#e65100"
+
+    readonly property color debugCardBackground: isDark ? "#2a2a2a" : "#ffffff"
+    readonly property color debugCardBorder: isDark ? "#3a3a3a" : "#eeeeee"
+
+    readonly property color iconLetterBackground: isDark ? "#1a3a35" : "#e0f2f1"
+    readonly property color iconLetterText: isDark ? "#4db8a0" : "#00695c"
+
+    readonly property color statusConnectedBg: isDark ? "#1b3d1b" : "#e8f5e9"
+    readonly property color statusDisconnectedBg: isDark ? "#3d1b1b" : "#fbe9e7"
+
+    readonly property color tabActive: isDark ? "#4db8ff" : "#00857a"
+    readonly property color tabInactive: isDark ? "#808080" : "#888888"
+    readonly property color tabIndicator: isDark ? "#4db8ff" : "#00857a"
+
+    readonly property color recordingBackground: isDark ? "#3d3020" : "#fff8e8"
+    readonly property color recordingBorder: isDark ? "#8a6a30" : "#d5a94f"
+    readonly property color recordingText: isDark ? "#ffcc00" : "#c62828"
+
+    readonly property color conflictBorder: isDark ? "#8a3a2a" : "#d98d72"
+    readonly property color conflictText: isDark ? "#ff8a65" : "#93421e"
 }
