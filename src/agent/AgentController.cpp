@@ -376,7 +376,7 @@ QVariantList AgentController::resolveOverlayApps()
     }
 
     QVariantList result;
-    static const QRegularExpression hotkeyNumRe(QStringLiteral("\\+(\\d+)$"));
+    static const QRegularExpression hotkeyNumRe(QStringLiteral("\\+([A-Za-z0-9]+)$"));
 
     for (const Binding& binding : m_config.bindings) {
         if (!binding.enabled) {
