@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QList>
 #include <QString>
 #include <QVariantList>
 #include <QQuickWindow>
@@ -17,7 +18,7 @@ public:
     void showHint();
 
 private:
-    QQuickWindow* m_window = nullptr;
+    QList<QQuickWindow*> m_windows;
 };
 
 }
