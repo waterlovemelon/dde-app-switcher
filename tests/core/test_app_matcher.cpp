@@ -54,6 +54,36 @@ private slots:
         QCOMPARE(result.evidence.last().matched, true);
     }
 
+    void desktopIdDoesNotSubstringMatchDifferentApp()
+    {
+        // Regression: "codex-desktop.desktop" must NOT match windows with wmClass "code"
+        AppInfo app;
+        app.desktopId = "codex-desktop.desktop";
+        app.startupWmClass = "codex-desktop";
+
+        WindowInfo window;
+        window.wmClass = "code";
+        window.title = "Visual Studio Code";
+
+        const MatchResult result = AppMatcher::match(app, window, {});
+        QVERIFY(!result.matched);
+    }
+
+    void desktopIdExactBaseNameMatchesWmClass()
+    {
+        AppInfo app;
+        app.desktopId = "code.desktop";
+        app.startupWmClass = "Code";
+
+        WindowInfo window;
+        window.wmClass = "code";
+        window.title = "Visual Studio Code";
+
+        const MatchResult result = AppMatcher::match(app, window, {});
+        QVERIFY(result.matched);
+        QVERIFY(result.totalScore >= 80);
+    }
+
     void recordsUnmatchedRuleEvidenceForDiagnostics()
     {
         AppInfo app;

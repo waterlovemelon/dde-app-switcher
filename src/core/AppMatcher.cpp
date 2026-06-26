@@ -78,8 +78,8 @@ MatchResult AppMatcher::match(const AppInfo& app, const WindowInfo& window, cons
         result.evidence.append(evidence("startup_wm_class", app.startupWmClass, window.wmClass, 100, true));
     }
 
-    const QString desktopBase = app.desktopId;
-    if (!desktopBase.isEmpty() && containsIgnoreCase(desktopBase, window.wmClass)) {
+    const QString desktopBase = app.desktopId.section('.', 0, -2);
+    if (!desktopBase.isEmpty() && equalsIgnoreCase(desktopBase, window.wmClass)) {
         result.totalScore += 80;
         result.evidence.append(evidence("desktop_id", desktopBase, window.wmClass, 80, true));
     }
