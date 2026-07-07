@@ -21,13 +21,39 @@ Flickable {
         spacing: 0
 
         // ── General ──
-        Text {
-            text: qsTr("通用")
-            color: DTKTheme.textSecondary
-            font.pixelSize: 12
-            font.weight: Font.DemiBold
-            font.letterSpacing: 0.5
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredHeight: sectionGeneralLabel.implicitHeight + 12 + 1
             Layout.bottomMargin: 12
+
+            Rectangle {
+                width: 3
+                height: sectionGeneralLabel.implicitHeight
+                radius: 1
+                color: DTKTheme.accentText
+                anchors.left: parent.left
+                anchors.verticalCenter: sectionGeneralLabel.verticalCenter
+            }
+
+            Text {
+                id: sectionGeneralLabel
+                text: qsTr("通用")
+                color: DTKTheme.textSecondary
+                font.pixelSize: 12
+                font.weight: Font.DemiBold
+                font.letterSpacing: 0.5
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.top: parent.top
+            }
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: 1
+                color: DTKTheme.separator
+            }
         }
 
         // Autostart
@@ -101,14 +127,40 @@ Flickable {
         }
 
         // ── Window ──
-        Text {
-            text: qsTr("窗口切换")
-            color: DTKTheme.textSecondary
-            font.pixelSize: 12
-            font.weight: Font.DemiBold
-            font.letterSpacing: 0.5
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredHeight: sectionWindowLabel.implicitHeight + 12 + 1
             Layout.topMargin: 24
             Layout.bottomMargin: 12
+
+            Rectangle {
+                width: 3
+                height: sectionWindowLabel.implicitHeight
+                radius: 1
+                color: DTKTheme.accentText
+                anchors.left: parent.left
+                anchors.verticalCenter: sectionWindowLabel.verticalCenter
+            }
+
+            Text {
+                id: sectionWindowLabel
+                text: qsTr("窗口切换")
+                color: DTKTheme.textSecondary
+                font.pixelSize: 12
+                font.weight: Font.DemiBold
+                font.letterSpacing: 0.5
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.top: parent.top
+            }
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: 1
+                color: DTKTheme.separator
+            }
         }
 
         // Multi-window strategy

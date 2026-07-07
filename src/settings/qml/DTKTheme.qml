@@ -186,10 +186,16 @@ QtObject {
 
     readonly property color errorBackground: isDark ? "#3d1a1a" : "#fbe9e7"
     readonly property color errorBorder: isDark ? "#5a2a2a" : "#e2b199"
-    readonly property color errorText: isDark ? "#ff6b6b" : "#c62828"
+    readonly property color errorText: isDark ? "#fca5a5" : "#dc2626"
+    readonly property color errorBg: isDark ? "#450a0a" : "#fee2e2"
 
     readonly property color successText: isDark ? "#66bb6a" : "#2e7d32"
     readonly property color warningText: isDark ? "#ffb74d" : "#e65100"
+
+    readonly property color warnBackground: isDark ? "#3d2a10" : "#fff3e0"
+    readonly property color warnBorder: isDark ? "#6a4a20" : "#e6a04f"
+    readonly property color warnText: isDark ? "#fbbf24" : "#b45309"
+    readonly property color warnBg: isDark ? "#451a03" : "#fef3c7"
 
     readonly property color debugCardBackground: isDark ? "#2a2a2a" : "#ffffff"
     readonly property color debugCardBorder: isDark ? "#3a3a3a" : "#eeeeee"

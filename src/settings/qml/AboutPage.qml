@@ -157,22 +157,35 @@ Flickable {
                     border.width: 1
                     border.color: DTKTheme.debugCardBorder
 
-                    ColumnLayout {
+                    RowLayout {
                         anchors.fill: parent
                         anchors.margins: 10
-                        spacing: 2
+                        spacing: 8
 
-                        Text {
-                            text: qsTr("Agent 状态")
-                            color: DTKTheme.textMuted
-                            font.pixelSize: 11
+                        Image {
+                            Layout.preferredWidth: 20
+                            Layout.preferredHeight: 20
+                            sourceSize.width: 20
+                            sourceSize.height: 20
+                            source: "image://theme/" + (controller.connected ? "emblem-success" : "dialog-error")
                         }
 
-                        Text {
-                            text: controller.connected ? qsTr("已连接") : qsTr("未连接")
-                            color: controller.connected ? DTKTheme.successText : DTKTheme.errorText
-                            font.pixelSize: 13
-                            font.weight: Font.DemiBold
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            Text {
+                                text: qsTr("Agent 状态")
+                                color: DTKTheme.textMuted
+                                font.pixelSize: 11
+                            }
+
+                            Text {
+                                text: controller.connected ? qsTr("已连接") : qsTr("未连接")
+                                color: controller.connected ? DTKTheme.successText : DTKTheme.errorText
+                                font.pixelSize: 13
+                                font.weight: Font.DemiBold
+                            }
                         }
                     }
                 }

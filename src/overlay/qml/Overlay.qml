@@ -6,9 +6,22 @@ Rectangle {
     color: overlayMode === "appbar" ? "#e6202428" : "#e6202428"
     border.color: overlayMode === "appbar" ? Qt.rgba(1, 1, 1, 0.15) : "#33ffffff"
     border.width: 1
+    focus: true
 
     signal appClicked(int index)
     signal hideRequested()
+
+    // ── Keyboard support ──────────────────────────────────────────
+    Keys.onEscapePressed: Qt.quit()
+    Keys.onDigit1Pressed: { if (appEntries.length >= 1) root.appClicked(0) }
+    Keys.onDigit2Pressed: { if (appEntries.length >= 2) root.appClicked(1) }
+    Keys.onDigit3Pressed: { if (appEntries.length >= 3) root.appClicked(2) }
+    Keys.onDigit4Pressed: { if (appEntries.length >= 4) root.appClicked(3) }
+    Keys.onDigit5Pressed: { if (appEntries.length >= 5) root.appClicked(4) }
+    Keys.onDigit6Pressed: { if (appEntries.length >= 6) root.appClicked(5) }
+    Keys.onDigit7Pressed: { if (appEntries.length >= 7) root.appClicked(6) }
+    Keys.onDigit8Pressed: { if (appEntries.length >= 8) root.appClicked(7) }
+    Keys.onDigit9Pressed: { if (appEntries.length >= 9) root.appClicked(8) }
 
     // ── App Bar Mode ──────────────────────────────────────────────
     Row {
@@ -182,7 +195,7 @@ Rectangle {
     }
 
     opacity: 0
-    Component.onCompleted: fadeIn.start()
+    Component.onCompleted: { fadeIn.start(); root.forceActiveFocus() }
 
     NumberAnimation {
         id: fadeIn

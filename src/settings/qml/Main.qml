@@ -97,13 +97,22 @@ ApplicationWindow {
                         Layout.preferredWidth: tabLabel.implicitWidth + 32
                         Layout.fillHeight: true
 
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            radius: 6
+                            color: window.selectedPage === tabItem.index ? DTKTheme.highlight : "transparent"
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                        }
+
                         Text {
                             id: tabLabel
                             anchors.centerIn: parent
                             text: tabItem.modelData
-                            color: window.selectedPage === tabItem.index ? DTKTheme.tabActive : DTKTheme.tabInactive
+                            color: window.selectedPage === tabItem.index ? "#ffffff" : DTKTheme.tabInactive
                             font.pixelSize: 14
                             font.weight: window.selectedPage === tabItem.index ? Font.DemiBold : Font.Normal
+                            Behavior on color { ColorAnimation { duration: 150 } }
                         }
 
                         Rectangle {
@@ -136,24 +145,27 @@ ApplicationWindow {
         }
 
         // ── Content area ──
-        StackLayout {
+        StackView {
+            id: stackView
             Layout.fillWidth: true
             Layout.fillHeight: true
-            currentIndex: window.selectedPage
+            initialItem: bindingsPageComponent
 
-            // Page 0: Bindings
-            BindingsPage {
-                controller: settingsController
+            replaceEnter: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 150
+                }
             }
-
-            // Page 1: Settings
-            SettingsPage {
-                controller: settingsController
-            }
-
-            // Page 2: About
-            AboutPage {
-                controller: settingsController
+            replaceExit: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 150
+                }
             }
         }
 
@@ -189,6 +201,37 @@ ApplicationWindow {
                     onClicked: settingsController.refresh()
                 }
             }
+        }
+    }
+
+    // ── Page components (loaded by StackView) ──
+    Component {
+        id: bindingsPageComponent
+        BindingsPage {
+            controller: settingsController
+        }
+    }
+
+    Component {
+        id: settingsPageComponent
+        SettingsPage {
+            controller: settingsController
+        }
+    }
+
+    Component {
+        id: aboutPageComponent
+        AboutPage {
+            controller: settingsController
+        }
+    }
+
+    // ── Page switching via StackView ──
+    Connections {
+        target: window
+        function onSelectedPageChanged() {
+            var components = [bindingsPageComponent, settingsPageComponent, aboutPageComponent]
+            stackView.replace(components[window.selectedPage])
         }
     }
 
